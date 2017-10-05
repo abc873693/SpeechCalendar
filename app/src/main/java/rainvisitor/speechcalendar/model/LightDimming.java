@@ -24,6 +24,10 @@ public class LightDimming extends RoomItem {
         //this.step = response.;
     }
 
+    public void setStep(SensorResponse response) {
+        step = response.getStep();
+    }
+
     @Override
     public String toString() {
         return "LightDimming{" +

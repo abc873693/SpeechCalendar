@@ -30,6 +30,17 @@ public class RoomInfo extends RoomItem {
         PowerFactor = roomInfoResponse.getPowerFactor();
     }
 
+    public void setRoomInfo(SensorResponse sensorResponse) {
+        this.CO2 = sensorResponse.getCO2();
+        Humidity = sensorResponse.getHumidity();
+        Temperature = sensorResponse.getTemperature();
+        Current = Double.valueOf(sensorResponse.getCurrent());
+        Voltage = Double.valueOf(sensorResponse.getVoltage());
+        RealTimePower = Double.valueOf(sensorResponse.getRealTimePower());
+        AccumulateElectricity = Double.valueOf(sensorResponse.getAccumulateElectricity());
+        PowerFactor = Double.valueOf(sensorResponse.getPowerFactor());
+    }
+
     public int getCO2() {
         return CO2;
     }

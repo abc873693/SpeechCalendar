@@ -24,16 +24,12 @@ import rainvisitor.speechcalendar.base.BaseFragment;
 import rainvisitor.speechcalendar.callback.RoomCallback;
 import rainvisitor.speechcalendar.libs.MQTTHelper;
 import rainvisitor.speechcalendar.model.AirConditioner;
-import rainvisitor.speechcalendar.model.AirConditionerResponse;
 import rainvisitor.speechcalendar.model.LightDimming;
-import rainvisitor.speechcalendar.model.LightDimmingResponse;
 import rainvisitor.speechcalendar.model.LightSwitch;
-import rainvisitor.speechcalendar.model.LightSwitchResponse;
 import rainvisitor.speechcalendar.model.RoomInfo;
-import rainvisitor.speechcalendar.model.RoomInfoResponse;
 import rainvisitor.speechcalendar.model.RoomItem;
+import rainvisitor.speechcalendar.model.SensorResponse;
 import rainvisitor.speechcalendar.model.TV;
-import rainvisitor.speechcalendar.model.TVResponse;
 
 public class RoomFragment extends BaseFragment {
 
@@ -109,38 +105,13 @@ public class RoomFragment extends BaseFragment {
             }
 
             @Override
-            public void onRoomInfo(RoomInfoResponse response, int position) {
-                super.onRoomInfo(response, position);
-                ((RoomInfo) roomItemList.get(position)).setRoomInfo(response);
-                roomItemAdapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onLightDimming(LightDimmingResponse response, int position) {
-                super.onLightDimming(response, position);
-                ((LightDimming) roomItemList.get(position)).setStep(response);
-                roomItemAdapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onLightSwitch(LightSwitchResponse response, int position) {
-                super.onLightSwitch(response, position);
-                ((LightSwitch) roomItemList.get(position)).setPower(response);
-                roomItemAdapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onTv(TVResponse response, int position) {
-                super.onTv(response, position);
-                ((TV) roomItemList.get(position)).setPower(response);
-                roomItemAdapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onAirConditioner(AirConditionerResponse response, int position) {
-                super.onAirConditioner(response, position);
-                ((AirConditioner) roomItemList.get(position)).setPower(response);
-                roomItemAdapter.notifyDataSetChanged();
+            public void onResponse(SensorResponse response) {
+                super.onResponse(response);
+                ((RoomInfo) roomItemList.get(0)).setRoomInfo(response);
+                ((LightDimming) roomItemList.get(1)).setStep(response);
+                ((LightSwitch) roomItemList.get(2)).setPower(response);
+                ((TV) roomItemList.get(3)).setPower(response);
+                ((AirConditioner) roomItemList.get(4)).setPower(response);
             }
         });
     }

@@ -7,12 +7,14 @@ import android.support.v7.widget.SwitchCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.util.List;
 
 import rainvisitor.speechcalendar.R;
+import rainvisitor.speechcalendar.libs.MQTTHelper;
 import rainvisitor.speechcalendar.model.AirConditioner;
 import rainvisitor.speechcalendar.model.LightDimming;
 import rainvisitor.speechcalendar.model.LightSwitch;
@@ -100,15 +102,52 @@ public class RoomItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         } else if (holder instanceof LightDimmingViewHolder) {
             ((LightDimmingViewHolder) holder).textViewTitle.setText(contactList.get(position).getTitle());
             ((LightDimmingViewHolder) holder).seekBar.setProgress(((LightDimming) contactList.get(position)).getStep());
+            ((LightDimmingViewHolder) holder).seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
+
+                }
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+                    MQTTHelper.publish(context, MQTTHelper.TOPIC_LIGHT_SWITCH, seekBar.getProgress() + "");
+                }
+            });
         } else if (holder instanceof LightSwitchViewHolder) {
             ((LightSwitchViewHolder) holder).textViewTitle.setText(contactList.get(position).getTitle());
             ((LightSwitchViewHolder) holder).switchControl.setChecked(((LightSwitch) contactList.get(position)).isPower());
+            ((LightSwitchViewHolder) holder).switchControl.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                    String content = b ? "ON" : "OFF";
+                    MQTTHelper.publish(context, MQTTHelper.TOPIC_LIGHT_SWITCH, content);
+                }
+            });
         } else if (holder instanceof TvViewHolder) {
             ((TvViewHolder) holder).textViewTitle.setText(contactList.get(position).getTitle());
             ((TvViewHolder) holder).switchControl.setChecked(((TV) contactList.get(position)).isPower());
+            ((TvViewHolder) holder).switchControl.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                    String content = b ? "ON" : "OFF";
+                    MQTTHelper.publish(context, MQTTHelper.TOPIC_TV, content);
+                }
+            });
         } else if (holder instanceof AirConditionerViewHolder) {
             ((AirConditionerViewHolder) holder).textViewTitle.setText(contactList.get(position).getTitle());
             ((AirConditionerViewHolder) holder).switchControl.setChecked(((AirConditioner) contactList.get(position)).isPower());
+            ((AirConditionerViewHolder) holder).switchControl.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                    String content = b ? "ON" : "OFF";
+                    MQTTHelper.publish(context, MQTTHelper.TOPIC_AIR_CONDITIONER, content);
+                }
+            });
         }
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
