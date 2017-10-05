@@ -24,7 +24,7 @@
             android:layout_gravity="bottom|end"
             android:layout_margin="15dp"
             android:src="@drawable/ic_mic_black"
-            app:backgroundTint="@color/red_500" />
+            app:backgroundTint="@color/main_theme" />
     </android.support.design.widget.CoordinatorLayout>
 
     <com.roughike.bottombar.BottomBar

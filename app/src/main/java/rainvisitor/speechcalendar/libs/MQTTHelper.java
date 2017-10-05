@@ -36,13 +36,12 @@ public class MQTTHelper {
 
     public static CallbackConnection connection;
 
-    private static final String HOST = "122.117.135.215";
+    private static final String HOST = "192.168.200.50";
     private static final int PORT = 63101;
 
     private static final String USERNAME = "icpsi";
     private static final String PASSWORD = "59209167";
 
-    public static final String TOPIC_RTC = "hok/system/type/rtc";
     public static final String TOPIC_SENSOR = "demo/home/1709181907/sensor";
     public static final String TOPIC_LIGHT_SWITCH = "demo/home/1709181907/dimming";
     public static final String TOPIC_LIGHT_DIMMING = "demo/home/1709181907/BattenLighting";

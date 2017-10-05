@@ -9,8 +9,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import rainvisitor.speechcalendar.R;
 import rainvisitor.speechcalendar.adapter.ChoiceAdapter;
@@ -41,5 +44,27 @@ public class Utils {
             choices.add(new Choice(s));
         }
         return choices;
+    }
+
+    //ex 2017-03-27 01:12:36
+    public static Date ConvertTime(String strCurrentDate) {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd H:m:s", Locale.getDefault());
+        try {
+            return format.parse(strCurrentDate);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Date();
+        }
+    }
+
+    //ex 2017-03-27 01:12:36
+    public static String ConvertTime(Date strCurrentDate) {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd H:m:s", Locale.getDefault());
+        try {
+            return format.format(strCurrentDate);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "error";
+        }
     }
 }

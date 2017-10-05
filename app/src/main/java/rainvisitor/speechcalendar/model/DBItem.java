@@ -10,6 +10,9 @@ public class DBItem {
     private String Text;
     private long AddTime;
 
+    private int Status;
+    private long Time;
+
     public DBItem() {
     }
 
@@ -17,6 +20,14 @@ public class DBItem {
         this.ID = ID;
         Text = text;
         AddTime = addTime;
+    }
+
+    public DBItem(int ID, String text, long addTime, long time, int status) {
+        this.ID = ID;
+        Text = text;
+        AddTime = addTime;
+        Status = status;
+        Time = time;
     }
 
     public int getID() {
@@ -43,12 +54,30 @@ public class DBItem {
         AddTime = addTime;
     }
 
+    public int getStatus() {
+        return Status;
+    }
+
+    public void setStatus(int status) {
+        Status = status;
+    }
+
+    public long getTime() {
+        return Time;
+    }
+
+    public void setTime(long time) {
+        Time = time;
+    }
+
     @Override
     public String toString() {
         return "DBItem{" +
                 "ID=" + ID +
                 ", Text='" + Text + '\'' +
                 ", AddTime=" + AddTime +
+                ", Status=" + Status +
+                ", Time=" + Time +
                 '}';
     }
 }

@@ -17,18 +17,29 @@ import rainvisitor.speechcalendar.model.DBItem;
 public class DB {
 
     public static final String CHAT_TABLE_NAME = "Chat";
+    public static final String EVENT_TABLE_NAME = "Event";
 
     public static final String ACCESS_TOKEN = "AccessToken";
 
     public static final String ID  = "ID";
     public static final String TEXT  = "Text";
     public static final String ADD_TIME  = "AddTime";
+    public static final String TIME  = "Time";
+    public static final String STATUS  = "Status";
 
     public static final String CREATE_CHAT_TABLE =
             "CREATE TABLE " + CHAT_TABLE_NAME + " (" +
                     ID + " INTEGER NOT NULL, " +
                     TEXT + " TEXT NOT NULL, " +
                     ADD_TIME + " INTEGER NOT NULL)";
+
+    public static final String CREATE_EVENT_TABLE =
+            "CREATE TABLE " + EVENT_TABLE_NAME + " (" +
+                    ID + " INTEGER NOT NULL, " +
+                    TEXT + " TEXT NOT NULL, " +
+                    ADD_TIME + " INTEGER NOT NULL, " +
+                    TIME + " INTEGER NOT NULL, " +
+                    STATUS + " INTEGER NOT NULL)";
 
     // 資料庫物件
     private SQLiteDatabase db;
@@ -54,6 +65,13 @@ public class DB {
                 cv.put(TEXT, item.getText());
                 cv.put(ADD_TIME, item.getAddTime());
                 break;
+            case EVENT_TABLE_NAME:
+                cv.put(ID, item.getID());
+                cv.put(TEXT, item.getText());
+                cv.put(ADD_TIME, item.getAddTime());
+                cv.put(TIME, item.getTime());
+                cv.put(STATUS, item.getStatus());
+                break;
         }
         // 新增一筆資料並取得編號
         // 第一個參數是表格名稱
@@ -75,6 +93,8 @@ public class DB {
         switch (TABLE_NAME) {
             case CHAT_TABLE_NAME:
                 break;
+            case EVENT_TABLE_NAME:
+                break;
         }
 
         // 設定修改資料的條件為編號
@@ -82,6 +102,8 @@ public class DB {
         String where = null;
         switch (TABLE_NAME) {
             case CHAT_TABLE_NAME:
+                break;
+            case EVENT_TABLE_NAME:
                 break;
         }
         // 執行修改資料並回傳修改的資料數量是否成功
@@ -117,6 +139,13 @@ public class DB {
                 result.setID(cursor.getInt(0));
                 result.setText(cursor.getString(1));
                 result.setAddTime(cursor.getLong(2));
+                break;
+            case EVENT_TABLE_NAME:
+                result.setID(cursor.getInt(0));
+                result.setText(cursor.getString(1));
+                result.setAddTime(cursor.getLong(2));
+                result.setTime(cursor.getLong(3));
+                result.setStatus(cursor.getInt(4));
                 break;
         }
 
