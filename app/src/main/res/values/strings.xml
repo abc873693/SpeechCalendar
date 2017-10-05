@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Speech Calendar</string>
+    <string name="server_client_id" translatable="false">987472570423-0unppe9d781f71nslbi11tu4utmmciko.apps.googleusercontent.com</string>
+    <string name="calender_app_not_found">找不到支援的行事曆 Apps</string>
+    <string name="send">Send</string>
+    <string name="title">Title</string>
+    <string name="time_begin">Time Begin</string>
+    <string name="time_end">Time End</string>
+    <string name="location">Location</string>
+    <string name="title_chat">聊天紀錄</string>
+    <string name="title_room">房間狀態</string>
+    <string name="title_event">行程</string>
+    <string name="title_CO2">二氧化碳濃度</string>
+    <string name="title_humidity">濕度</string>
+    <string name="title_temperature">溫度</string>
+    <string name="title_current">電流</string>
+    <string name="title_voltage">電壓</string>
+    <string name="title_real_time_power">及時功率</string>
+    <string name="electricity_title_accumulate">累積用電</string>
+    <string name="title_power_factor">功率因數</string>
+</resources>

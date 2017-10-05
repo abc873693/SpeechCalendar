@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tabs>
+    <tab
+        icon="@drawable/ic_chat"
+        id="@+id/tab_chat"
+        title="@string/title_chat" />
+    <tab
+        icon="@drawable/ic_home"
+        id="@+id/tab_room"
+        title="@string/title_room" />
+    <tab
+        icon="@drawable/ic_event"
+        id="@+id/tab_event"
+        title="@string/title_event" />
+</tabs>

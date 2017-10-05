@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/main_theme"
+    android:orientation="vertical"
+    android:layout_marginBottom="70dp">
+
+    <com.stfalcon.chatkit.messages.MessagesList
+        android:id="@+id/messagesList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:incomingBubbleDrawable="@drawable/ic_background_chat_assistant"
+        app:incomingTextColor="@color/black"
+        app:incomingTimeTextColor="@color/grey_500"
+        app:outcomingBubbleDrawable="@drawable/ic_background_chat_user"
+        app:outcomingTextColor="@color/black"
+        app:outcomingTimeTextColor="@color/grey_500"
+        />
+</LinearLayout>
