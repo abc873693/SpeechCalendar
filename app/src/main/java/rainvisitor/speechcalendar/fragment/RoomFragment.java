@@ -9,11 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import org.fusesource.mqtt.client.QoS;
-import org.fusesource.mqtt.client.Topic;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.fusesource.mqtt.client.Callback;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -21,6 +17,7 @@ import butterknife.Unbinder;
 import rainvisitor.speechcalendar.R;
 import rainvisitor.speechcalendar.adapter.RoomItemAdapter;
 import rainvisitor.speechcalendar.base.BaseFragment;
+import rainvisitor.speechcalendar.callback.GeneralCallback;
 import rainvisitor.speechcalendar.callback.RoomCallback;
 import rainvisitor.speechcalendar.libs.MQTTHelper;
 import rainvisitor.speechcalendar.model.AirConditioner;
@@ -39,8 +36,6 @@ public class RoomFragment extends BaseFragment {
     Unbinder unbinder;
 
     private RoomItemAdapter roomItemAdapter;
-
-    private List<RoomItem> roomItemList;
 
     private View view;
 
@@ -74,13 +69,7 @@ public class RoomFragment extends BaseFragment {
     }
 
     private void setView() {
-        roomItemList = new ArrayList<>();
-        roomItemList.add(new RoomInfo("即時資訊", new Topic(MQTTHelper.TOPIC_SENSOR, QoS.EXACTLY_ONCE)));
-        roomItemList.add(new LightDimming("調光燈", new Topic(MQTTHelper.TOPIC_LIGHT_DIMMING, QoS.EXACTLY_ONCE)));
-        roomItemList.add(new LightSwitch("層板燈", new Topic(MQTTHelper.TOPIC_LIGHT_SWITCH, QoS.EXACTLY_ONCE)));
-        roomItemList.add(new TV("電視", new Topic(MQTTHelper.TOPIC_TV, QoS.EXACTLY_ONCE)));
-        roomItemList.add(new AirConditioner("冷氣", new Topic(MQTTHelper.TOPIC_AIR_CONDITIONER, QoS.EXACTLY_ONCE)));
-        roomItemAdapter = new RoomItemAdapter(getActivity(), roomItemList, new RoomItemAdapter.OnItemClickListener() {
+        roomItemAdapter = new RoomItemAdapter(getActivity(), getRoomItemList(), new RoomItemAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(RoomItem item, int position) {
 
@@ -88,7 +77,14 @@ public class RoomFragment extends BaseFragment {
         });
         recycleViewRoomItem.setAdapter(roomItemAdapter);
         recycleViewRoomItem.setLayoutManager(new LinearLayoutManager(getActivity()));
-        MQTTHelper.subscribe(getActivity(), roomItemList, new RoomCallback() {
+        MQTTHelper.addCallback(new GeneralCallback() {
+            @Override
+            public void onSuccess() {
+                super.onSuccess();
+                roomItemAdapter.notifyDataSetChanged();
+            }
+        });
+        MQTTHelper.subscribe(getActivity(), getRoomItemList(), new RoomCallback() {
             @Override
             public void onError() {
                 super.onError();
@@ -107,11 +103,12 @@ public class RoomFragment extends BaseFragment {
             @Override
             public void onResponse(SensorResponse response) {
                 super.onResponse(response);
-                ((RoomInfo) roomItemList.get(0)).setRoomInfo(response);
-                ((LightDimming) roomItemList.get(1)).setStep(response);
-                ((LightSwitch) roomItemList.get(2)).setPower(response);
-                ((TV) roomItemList.get(3)).setPower(response);
-                ((AirConditioner) roomItemList.get(4)).setPower(response);
+                ((RoomInfo) getRoomItemList().get(0)).setRoomInfo(response);
+                ((LightDimming) getRoomItemList().get(1)).setStep(response);
+                ((LightSwitch) getRoomItemList().get(2)).setPower(response);
+                ((TV) getRoomItemList().get(3)).setPower(response);
+                ((AirConditioner) getRoomItemList().get(4)).setPower(response);
+
             }
         });
     }
@@ -120,5 +117,16 @@ public class RoomFragment extends BaseFragment {
     public void onDestroyView() {
         super.onDestroyView();
         unbinder.unbind();
+        MQTTHelper.connection.disconnect(new Callback<Void>() {
+            @Override
+            public void onSuccess(Void value) {
+
+            }
+
+            @Override
+            public void onFailure(Throwable value) {
+
+            }
+        });
     }
 }

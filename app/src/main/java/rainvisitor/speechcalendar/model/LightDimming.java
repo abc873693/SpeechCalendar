@@ -6,32 +6,41 @@ package rainvisitor.speechcalendar.model;
 
 public class LightDimming extends RoomItem {
 
-    private int step = 0;
+    private int value = 0;
 
     public LightDimming(String title, org.fusesource.mqtt.client.Topic topic) {
         super(title, topic);
     }
 
-    public int getStep() {
-        return step;
+    public int getValue() {
+        return value;
     }
 
-    public void setStep(int step) {
-        this.step = step;
+    public void setValue(int value) {
+        this.value = value;
     }
 
     public void setStep(LightDimmingResponse response) {
-        //this.step = response.;
+        //this.value = response.;
+    }
+
+    public int getStep() {
+        if (value == 0) return 0;
+        if (value <= 27000) return 1;
+        if (value <= 28000) return 2;
+        if (value <= 29000) return 3;
+        if (value <= 30000) return 4;
+        return 5;
     }
 
     public void setStep(SensorResponse response) {
-        step = response.getStep();
+        value = response.getStep();
     }
 
     @Override
     public String toString() {
         return "LightDimming{" +
-                "step=" + step +
+                "value=" + value +
                 '}';
     }
 }

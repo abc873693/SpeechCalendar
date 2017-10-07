@@ -21,6 +21,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import rainvisitor.speechcalendar.callback.GeneralCallback;
 import rainvisitor.speechcalendar.callback.RoomCallback;
 import rainvisitor.speechcalendar.model.RoomItem;
 import rainvisitor.speechcalendar.model.SensorResponse;
@@ -35,11 +36,10 @@ public class MQTTHelper {
 
     public static CallbackConnection connection;
 
-    private static final String HOST = "192.168.200.50";
-    private static final int PORT = 63101;
+    private static GeneralCallback generalCallback = null;
 
-    private static final String USERNAME = "icpsi";
-    private static final String PASSWORD = "59209167";
+    private static final String HOST = "pj.icp-si.com";
+    private static final int PORT = 65530;
 
     public static final String TOPIC_SENSOR = "demo/home/1709181907/sensor";
     public static final String TOPIC_LIGHT_SWITCH = "demo/home/1709181907/dimming";
@@ -53,8 +53,6 @@ public class MQTTHelper {
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
-        mqtt.setUserName(USERNAME);
-        mqtt.setPassword(PASSWORD);
         connection = mqtt.callbackConnection();
     }
 
@@ -81,6 +79,7 @@ public class MQTTHelper {
                 }
                 assert data != null;
                 int start = data.indexOf('{');
+                if (start == -1) return;
                 final String content = data.substring(start);
                 final String finalTopicText = topicText;
                 activity.runOnUiThread(new Runnable() {
@@ -90,6 +89,8 @@ public class MQTTHelper {
                         if (finalTopicText.contains(TOPIC_SENSOR)) {
                             final SensorResponse roomInfoResponse = new Gson().fromJson(content, SensorResponse.class);
                             callback.onResponse(roomInfoResponse);
+                            if (MQTTHelper.generalCallback != null)
+                                MQTTHelper.generalCallback.onSuccess();
                         }
                     }
                 });
@@ -108,7 +109,7 @@ public class MQTTHelper {
 
             // Once we connect..
             public void onSuccess(Void v) {
-
+                Log.e("onSuccess", "connect");
                 // Subscribe to a topic
                 List<Topic> topicList = new ArrayList<>();
                 for (RoomItem item : roomItems) {
@@ -117,6 +118,7 @@ public class MQTTHelper {
                 Topic[] topics = topicList.toArray(new Topic[topicList.size()]);
                 connection.subscribe(topics, new Callback<byte[]>() {
                     public void onSuccess(byte[] qoses) {
+                        Log.e("onSuccess", "subscribe");
                         // The result of the subscribe request.
                         String sh = null;
                         try {
@@ -136,17 +138,38 @@ public class MQTTHelper {
         });
     }
 
-    public static void publish(final Context context, String topic, String content) {
-        connection.publish(topic, content.getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+    public static void publish(final Context context, final String topic, final String content) {
+        new Thread(new Runnable() {
             @Override
-            public void onSuccess(Void value) {
-                Toast.makeText(context, "成功", Toast.LENGTH_SHORT).show();
-            }
+            public void run() {
+                Log.e("content", topic.length() + " " + content + " " + content.getBytes().length);
+                connection.publish(topic, content.getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+                    @Override
+                    public void onSuccess(Void value) {
+                        ((Activity) context).runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context, "成功", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
 
-            @Override
-            public void onFailure(Throwable value) {
-                Toast.makeText(context, "失敗", Toast.LENGTH_SHORT).show();
+                    @Override
+                    public void onFailure(Throwable value) {
+                        ((Activity) context).runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context, "失敗", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                });
             }
-        });
+        }).start();
+
+    }
+
+    public static void addCallback(GeneralCallback generalCallback) {
+        MQTTHelper.generalCallback = generalCallback;
     }
 }

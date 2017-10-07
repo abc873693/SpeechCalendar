@@ -1,5 +1,7 @@
 package rainvisitor.speechcalendar.model;
 
+import android.util.Log;
+
 /**
  * Created by Ray on 2017/10/5.
  */
@@ -31,6 +33,7 @@ public class RoomInfo extends RoomItem {
     }
 
     public void setRoomInfo(SensorResponse sensorResponse) {
+        Log.e("set",sensorResponse.toString());
         this.CO2 = sensorResponse.getCO2();
         Humidity = sensorResponse.getHumidity();
         Temperature = sensorResponse.getTemperature();

@@ -25,7 +25,7 @@ public class TV extends RoomItem {
     }
 
     public void setPower(SensorResponse response) {
-        power = response.getSwitchPower() == 1;
+        power = (response.getTvPower() == 1);
     }
 
     @Override

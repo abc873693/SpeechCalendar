@@ -25,7 +25,7 @@ public class LightSwitch extends RoomItem {
     }
 
     public void setPower(SensorResponse response) {
-        power = response.getSwitchPower() == 1;
+        power = (response.getSwitchPower() == 1);
     }
 
     @Override
