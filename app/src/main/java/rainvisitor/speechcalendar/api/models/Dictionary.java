@@ -15,27 +15,15 @@ public class Dictionary {
     public static int PLACE = 4;
     public static int ITEM = 5;
 
-    @SerializedName("ID")
-    private int ID;
-
     @SerializedName("Word")
     private String Word;
 
-    @SerializedName("Part")
-    private int Part;
+    @SerializedName("Flag")
+    private String Flag;
 
-    public Dictionary(int ID, String word, int part) {
-        this.ID = ID;
+    public Dictionary(String word, String flag) {
         Word = word;
-        Part = part;
-    }
-
-    public int getID() {
-        return ID;
-    }
-
-    public void setID(int ID) {
-        this.ID = ID;
+        Flag = flag;
     }
 
     public String getWord() {
@@ -46,20 +34,19 @@ public class Dictionary {
         Word = word;
     }
 
-    public int getPart() {
-        return Part;
+    public String getFlag() {
+        return Flag;
     }
 
-    public void setPart(int part) {
-        Part = part;
+    public void setFlag(String flag) {
+        Flag = flag;
     }
 
     @Override
     public String toString() {
         return "Dictionary{" +
-                "ID=" + ID +
-                ", Word='" + Word + '\'' +
-                ", Part=" + Part +
+                "Word='" + Word + '\'' +
+                ", Flag='" + Flag + '\'' +
                 '}';
     }
 }
