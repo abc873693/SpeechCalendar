@@ -129,19 +129,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSuccess(String word, List<Dictionary> response) {
                 super.onSuccess(word, response);
-                if (response == null) {
-                    response = new ArrayList<>();
-                    response.add(new Dictionary(Dictionary.UNKNOWN, word, 0));
-                } else {
-                    Log.e("onSuccess", response.toString());
-                    int start, end;
-                    for (int i = 0; i < response.size() - 1; i++) {
-                        start = word.indexOf(response.get(i).getWord());
-                        end = word.indexOf(response.get(i + 1).getWord(), start);
-                        if (start != end - 1)
-                            response.add(i + 1, new Dictionary(Dictionary.UNKNOWN, word.substring(start, end), 0));
-                    }
-                }
+                Log.e("onSuccess",response.toString());
                 thingWork(Words, response);
             }
         });

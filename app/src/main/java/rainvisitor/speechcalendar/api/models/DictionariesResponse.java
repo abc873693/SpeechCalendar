@@ -16,7 +16,7 @@ public class DictionariesResponse {
     @SerializedName("ResponseMessage")
     private String Message;
 
-    @SerializedName("ResponseData")
+    @SerializedName("JiebaData")
     private List<Dictionary> Data;
 
     public DictionariesResponse() {
