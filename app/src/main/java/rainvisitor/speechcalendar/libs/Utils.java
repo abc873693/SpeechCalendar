@@ -59,7 +59,7 @@ public class Utils {
 
     //ex 2017-03-27 01:12:36
     public static String ConvertTime(Date strCurrentDate) {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd H:m:s", Locale.getDefault());
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         try {
             return format.format(strCurrentDate);
         } catch (Exception e) {
