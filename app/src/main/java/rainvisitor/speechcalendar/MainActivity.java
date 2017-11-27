@@ -38,6 +38,11 @@ import rainvisitor.speechcalendar.libs.ThingHelper;
 import rainvisitor.speechcalendar.libs.Utils;
 import rainvisitor.speechcalendar.model.Choice;
 
+import static rainvisitor.speechcalendar.libs.ThingHelper.analysisIsTimeAndPurpose;
+import static rainvisitor.speechcalendar.libs.ThingHelper.receiveVoice;
+import static rainvisitor.speechcalendar.libs.ThingHelper.state;
+import static rainvisitor.speechcalendar.libs.ThingHelper.wait;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final int TAG_FRAGMENT_CHAT = 0;
@@ -119,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void searchWord(final ArrayList<String> Words) {
+        Log.d("searchWord", Words.get(0));
         Helper.get(this, Words.get(0), new DictionariesCallback() {
             @Override
             public void onFailure(IOException e) {
@@ -129,17 +135,26 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSuccess(String word, List<Dictionary> response) {
                 super.onSuccess(word, response);
-                Log.e("onSuccess",response.toString());
-                thingWork(Words, response);
+                Log.e("onSuccess", response.toString());
+                if (state == wait) {
+                    thingWork(Words, response);
+                } else if (state == receiveVoice) {
+                    ThingHelper.oldWords = ThingHelper.words;
+                    ThingHelper.words = Words;
+                    ThingHelper.dictionaryList = response;
+                    state = analysisIsTimeAndPurpose;
+                }
             }
         });
     }
 
     private void thingWork(List<String> Words, List<Dictionary> response) {
-        ThingHelper.send(Words, response, new ThingCallback() {
+        state = ThingHelper.analysisIsArrange;
+        ThingHelper.send(this, Words, response, new ThingCallback() {
             @Override
             public void unKnownCommand(List<String> commands) {
                 super.unKnownCommand(commands);
+                Log.d("ThingHelper", "unKnownCommand");
                 Utils.createChoiceDialog(MainActivity.this, "無法解析 請問您是哪種意思?", Utils.CovertWord(commands), new ChoiceAdapter.OnItemClickListener() {
                     @Override
                     public void onItemClick(Choice item, int position) {
@@ -168,6 +183,16 @@ public class MainActivity extends AppCompatActivity {
                             .show();
                 }
             }
+
+            @Override
+            public void needVoice(Boolean flagThing, Boolean flagTime) {
+                super.needVoice(flagThing, flagTime);
+                if(!flagThing){
+                    openSpeaker("請問你是想做甚麼事情?");
+                }else if(!flagTime){
+                    openSpeaker("請問你要預約幾點?");
+                }
+            }
         });
     }
 
@@ -175,11 +200,18 @@ public class MainActivity extends AppCompatActivity {
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.fab:
-                Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-                intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "請說話..."); //語音辨識 Dialog 上要顯示的提示文字
-                startActivityForResult(intent, REQUEST_VOICE_RECOGNIZE);
+                //openSpeaker("請說話...");
+                ArrayList<String> result = new ArrayList<>();
+                result.add("幫我新增跟研究生開會");
+                searchWord(result);
                 break;
         }
+    }
+
+    private void openSpeaker(String message) {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "請說話..."); //語音辨識 Dialog 上要顯示的提示文字
+        startActivityForResult(intent, REQUEST_VOICE_RECOGNIZE);
     }
 }
