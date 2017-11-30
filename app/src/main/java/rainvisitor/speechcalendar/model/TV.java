@@ -19,8 +19,13 @@ public class TV extends RoomItem {
     public void setPower(boolean power) {
         this.power = power;
     }
+
     public void setPower(TVResponse response) {
 
+    }
+
+    public void setPower(SensorResponse response) {
+        power = (response.getTvPower() == 1);
     }
 
     @Override

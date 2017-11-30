@@ -9,11 +9,23 @@ import java.util.List;
 
 public class ThingCallback {
 
-    public void unKnownCommand(List<String> commands){
+    public void unKnownCommand(List<String> commands) {
+
+    }
+
+    public void needVoice(Boolean flagThing, Boolean flagTime) {
 
     }
 
     public void createCalender(String title, Date startDate, Date endDate, String location) {
+
+    }
+
+    public void hardwareControl(String name, int value) {
+
+    }
+
+    public void hardwareStroke(String name, int value, Date time) {
 
     }
 }

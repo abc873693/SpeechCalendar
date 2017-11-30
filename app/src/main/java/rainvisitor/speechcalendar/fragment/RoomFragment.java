@@ -9,11 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import org.fusesource.mqtt.client.QoS;
-import org.fusesource.mqtt.client.Topic;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.fusesource.mqtt.client.Callback;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -21,19 +17,16 @@ import butterknife.Unbinder;
 import rainvisitor.speechcalendar.R;
 import rainvisitor.speechcalendar.adapter.RoomItemAdapter;
 import rainvisitor.speechcalendar.base.BaseFragment;
+import rainvisitor.speechcalendar.callback.GeneralCallback;
 import rainvisitor.speechcalendar.callback.RoomCallback;
 import rainvisitor.speechcalendar.libs.MQTTHelper;
 import rainvisitor.speechcalendar.model.AirConditioner;
-import rainvisitor.speechcalendar.model.AirConditionerResponse;
 import rainvisitor.speechcalendar.model.LightDimming;
-import rainvisitor.speechcalendar.model.LightDimmingResponse;
 import rainvisitor.speechcalendar.model.LightSwitch;
-import rainvisitor.speechcalendar.model.LightSwitchResponse;
 import rainvisitor.speechcalendar.model.RoomInfo;
-import rainvisitor.speechcalendar.model.RoomInfoResponse;
 import rainvisitor.speechcalendar.model.RoomItem;
+import rainvisitor.speechcalendar.model.SensorResponse;
 import rainvisitor.speechcalendar.model.TV;
-import rainvisitor.speechcalendar.model.TVResponse;
 
 public class RoomFragment extends BaseFragment {
 
@@ -43,8 +36,6 @@ public class RoomFragment extends BaseFragment {
     Unbinder unbinder;
 
     private RoomItemAdapter roomItemAdapter;
-
-    private List<RoomItem> roomItemList;
 
     private View view;
 
@@ -78,13 +69,7 @@ public class RoomFragment extends BaseFragment {
     }
 
     private void setView() {
-        roomItemList = new ArrayList<>();
-        roomItemList.add(new RoomInfo("即時資訊", new Topic(MQTTHelper.TOPIC_SENSOR, QoS.EXACTLY_ONCE)));
-        roomItemList.add(new LightDimming("調光燈", new Topic(MQTTHelper.TOPIC_LIGHT_DIMMING, QoS.EXACTLY_ONCE)));
-        roomItemList.add(new LightSwitch("層板燈", new Topic(MQTTHelper.TOPIC_LIGHT_SWITCH, QoS.EXACTLY_ONCE)));
-        roomItemList.add(new TV("電視", new Topic(MQTTHelper.TOPIC_TV, QoS.EXACTLY_ONCE)));
-        roomItemList.add(new AirConditioner("冷氣", new Topic(MQTTHelper.TOPIC_AIR_CONDITIONER, QoS.EXACTLY_ONCE)));
-        roomItemAdapter = new RoomItemAdapter(getActivity(), roomItemList, new RoomItemAdapter.OnItemClickListener() {
+        roomItemAdapter = new RoomItemAdapter(getActivity(), getRoomItemList(), new RoomItemAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(RoomItem item, int position) {
 
@@ -92,7 +77,14 @@ public class RoomFragment extends BaseFragment {
         });
         recycleViewRoomItem.setAdapter(roomItemAdapter);
         recycleViewRoomItem.setLayoutManager(new LinearLayoutManager(getActivity()));
-        MQTTHelper.subscribe(getActivity(), roomItemList, new RoomCallback() {
+        MQTTHelper.addCallback(new GeneralCallback() {
+            @Override
+            public void onSuccess() {
+                super.onSuccess();
+                roomItemAdapter.notifyDataSetChanged();
+            }
+        });
+        MQTTHelper.subscribe(getActivity(), getRoomItemList(), new RoomCallback() {
             @Override
             public void onError() {
                 super.onError();
@@ -109,38 +101,14 @@ public class RoomFragment extends BaseFragment {
             }
 
             @Override
-            public void onRoomInfo(RoomInfoResponse response, int position) {
-                super.onRoomInfo(response, position);
-                ((RoomInfo) roomItemList.get(position)).setRoomInfo(response);
-                roomItemAdapter.notifyDataSetChanged();
-            }
+            public void onResponse(SensorResponse response) {
+                super.onResponse(response);
+                ((RoomInfo) getRoomItemList().get(0)).setRoomInfo(response);
+                ((LightDimming) getRoomItemList().get(1)).setStep(response);
+                ((LightSwitch) getRoomItemList().get(2)).setPower(response);
+                ((TV) getRoomItemList().get(3)).setPower(response);
+                ((AirConditioner) getRoomItemList().get(4)).setPower(response);
 
-            @Override
-            public void onLightDimming(LightDimmingResponse response, int position) {
-                super.onLightDimming(response, position);
-                ((LightDimming) roomItemList.get(position)).setStep(response);
-                roomItemAdapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onLightSwitch(LightSwitchResponse response, int position) {
-                super.onLightSwitch(response, position);
-                ((LightSwitch) roomItemList.get(position)).setPower(response);
-                roomItemAdapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onTv(TVResponse response, int position) {
-                super.onTv(response, position);
-                ((TV) roomItemList.get(position)).setPower(response);
-                roomItemAdapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onAirConditioner(AirConditionerResponse response, int position) {
-                super.onAirConditioner(response, position);
-                ((AirConditioner) roomItemList.get(position)).setPower(response);
-                roomItemAdapter.notifyDataSetChanged();
             }
         });
     }
@@ -149,5 +117,16 @@ public class RoomFragment extends BaseFragment {
     public void onDestroyView() {
         super.onDestroyView();
         unbinder.unbind();
+        MQTTHelper.connection.disconnect(new Callback<Void>() {
+            @Override
+            public void onSuccess(Void value) {
+
+            }
+
+            @Override
+            public void onFailure(Throwable value) {
+
+            }
+        });
     }
 }

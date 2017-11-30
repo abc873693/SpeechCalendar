@@ -66,10 +66,10 @@ public class EventFragment extends BaseFragment {
     }
 
     private void setView() {
-       /* Calendar calendar = Calendar.getInstance();
-        calendar.set(2017, 10, 4, 18, 0);
+        /*Calendar calendar = Calendar.getInstance();
+        calendar.set(2017, 9, 10, 18, 0);
         getDB().insert(DB.EVENT_TABLE_NAME, new DBItem(0, "開啟 層板燈", new Date().getTime(), calendar.getTimeInMillis(), Event.Status.FINISHED.ordinal()));
-        calendar.set(2017, 10, 10, 8, 0);
+        calendar.set(2017, 9, 17, 8, 0);
         getDB().insert(DB.EVENT_TABLE_NAME, new DBItem(1, "關閉 冷氣", new Date().getTime(), calendar.getTimeInMillis(), Event.Status.NORMAL.ordinal()));*/
         eventList = parseEventData(getDB().getAll(DB.EVENT_TABLE_NAME));
         eventAdapter = new EventAdapter(getActivity(), eventList, new EventAdapter.OnItemClickListener() {

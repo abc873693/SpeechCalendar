@@ -24,6 +24,10 @@ public class AirConditioner extends RoomItem {
 
     }
 
+    public void setPower(SensorResponse response) {
+        power = (response.getAirConditionerPower() == 1);
+    }
+
     @Override
     public String toString() {
         return "AirConditioner{" +

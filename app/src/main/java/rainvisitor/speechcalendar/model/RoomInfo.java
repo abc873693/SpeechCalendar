@@ -1,5 +1,7 @@
 package rainvisitor.speechcalendar.model;
 
+import android.util.Log;
+
 /**
  * Created by Ray on 2017/10/5.
  */
@@ -28,6 +30,18 @@ public class RoomInfo extends RoomItem {
         RealTimePower = roomInfoResponse.getRealTimePower();
         AccumulateElectricity = roomInfoResponse.getAccumulateElectricity();
         PowerFactor = roomInfoResponse.getPowerFactor();
+    }
+
+    public void setRoomInfo(SensorResponse sensorResponse) {
+        Log.e("set",sensorResponse.toString());
+        this.CO2 = sensorResponse.getCO2();
+        Humidity = sensorResponse.getHumidity();
+        Temperature = sensorResponse.getTemperature();
+        Current = Double.valueOf(sensorResponse.getCurrent());
+        Voltage = Double.valueOf(sensorResponse.getVoltage());
+        RealTimePower = Double.valueOf(sensorResponse.getRealTimePower());
+        AccumulateElectricity = Double.valueOf(sensorResponse.getAccumulateElectricity());
+        PowerFactor = Double.valueOf(sensorResponse.getPowerFactor());
     }
 
     public int getCO2() {
