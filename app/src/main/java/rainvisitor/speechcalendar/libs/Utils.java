@@ -69,6 +69,16 @@ public class Utils {
         }
     }
 
+    public static String ConvertTime(long strCurrentDate) {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        try {
+            return format.format(strCurrentDate);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "error";
+        }
+    }
+
     /**
      * 中文數字转阿拉伯数组【十万九千零六十  --> 109060】
      *

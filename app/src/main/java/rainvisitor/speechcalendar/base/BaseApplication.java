@@ -1,6 +1,7 @@
 package rainvisitor.speechcalendar.base;
 
 import android.app.Application;
+import android.arch.persistence.room.Room;
 
 import org.fusesource.mqtt.client.QoS;
 import org.fusesource.mqtt.client.Topic;
@@ -8,7 +9,7 @@ import org.fusesource.mqtt.client.Topic;
 import java.util.ArrayList;
 import java.util.List;
 
-import rainvisitor.speechcalendar.libs.DB;
+import rainvisitor.speechcalendar.libs.AppDatabase;
 import rainvisitor.speechcalendar.libs.MQTTHelper;
 import rainvisitor.speechcalendar.model.AirConditioner;
 import rainvisitor.speechcalendar.model.LightDimming;
@@ -25,14 +26,19 @@ public class BaseApplication extends Application {
 
     private List<RoomItem> roomItemList;
 
-    private DB db;
+    private AppDatabase db;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        db = new DB(getApplicationContext());
+        initRoomDatabase();
         MQTTHelper.init();
         setDeviceData();
+    }
+
+    private void initRoomDatabase(){
+        db = Room.databaseBuilder(getApplicationContext(),
+                AppDatabase.class, "database-name").allowMainThreadQueries().build();;
     }
 
     private void setDeviceData() {
@@ -44,12 +50,8 @@ public class BaseApplication extends Application {
         roomItemList.add(new AirConditioner("冷氣", new Topic(MQTTHelper.TOPIC_AIR_CONDITIONER, QoS.EXACTLY_ONCE)));
     }
 
-    public DB getDb() {
+    public AppDatabase getDB() {
         return db;
-    }
-
-    public void setDb(DB db) {
-        this.db = db;
     }
 
     public List<RoomItem> getRoomItemList() {

@@ -4,7 +4,7 @@ import android.support.v4.app.Fragment;
 
 import java.util.List;
 
-import rainvisitor.speechcalendar.libs.DB;
+import rainvisitor.speechcalendar.libs.AppDatabase;
 import rainvisitor.speechcalendar.model.RoomItem;
 
 /**
@@ -13,8 +13,8 @@ import rainvisitor.speechcalendar.model.RoomItem;
 
 public class BaseFragment extends Fragment {
 
-    public DB getDB(){
-       return  ((BaseApplication)(getActivity().getApplicationContext())).getDb();
+    public AppDatabase getDB(){
+       return  ((BaseApplication)(getActivity().getApplicationContext())).getDB();
     }
 
     public List<RoomItem> getRoomItemList(){

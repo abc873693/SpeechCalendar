@@ -22,9 +22,7 @@ import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import rainvisitor.speechcalendar.R;
 import rainvisitor.speechcalendar.base.BaseFragment;
-import rainvisitor.speechcalendar.libs.DB;
 import rainvisitor.speechcalendar.model.Author;
-import rainvisitor.speechcalendar.model.DBItem;
 import rainvisitor.speechcalendar.model.Message;
 
 public class ChatFragment extends BaseFragment {
@@ -64,7 +62,7 @@ public class ChatFragment extends BaseFragment {
         restoreArgs(savedInstanceState);
         unbinder = ButterKnife.bind(this, view);
         if (!Word.equals(""))
-            getDB().insert(DB.CHAT_TABLE_NAME, new DBItem(Integer.valueOf(userID), Word, new Date().getTime()));
+            getDB().messageDao().insertAll(new Message(userID, Word, new Date().getTime()));
         setView();
         return view;
     }
@@ -86,7 +84,7 @@ public class ChatFragment extends BaseFragment {
     private void setView() {
         assistant = new Author(assistantID, "Assistant", "Assistant");
         user = new Author(userID, "user", "user");
-        messages = parseMessageData(getDB().getAll(DB.CHAT_TABLE_NAME));
+        messages = getDB().messageDao().getAll();
         ImageLoader imageLoader = new ImageLoader() {
             @Override
             public void loadImage(ImageView imageView, String url) {
@@ -102,19 +100,6 @@ public class ChatFragment extends BaseFragment {
         adapter = new MessagesListAdapter<>(userID, holdersConfig, imageLoader);
         adapter.addToEnd(messages, false);
         messagesList.setAdapter(adapter);
-    }
-
-    private List<Message> parseMessageData(List<DBItem> chatList) {
-        List<Message> messageList = new ArrayList<>();
-        for (int i = chatList.size() - 1; i >= 0; i--) {
-            DBItem dbItem = chatList.get(i);
-            if ((dbItem.getID() + "").equals(userID)) {
-                messageList.add(new Message(userID + "", dbItem.getText(), user, new Date(dbItem.getAddTime())));
-            } else if ((dbItem.getID() + "").equals(assistantID)) {
-                messageList.add(new Message(assistantID + "", dbItem.getText(), assistant, new Date(dbItem.getAddTime())));
-            }
-        }
-        return messageList;
     }
 
     @Override
