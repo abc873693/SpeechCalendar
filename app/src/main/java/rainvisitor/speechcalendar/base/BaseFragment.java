@@ -13,11 +13,15 @@ import rainvisitor.speechcalendar.model.RoomItem;
 
 public class BaseFragment extends Fragment {
 
-    public AppDatabase getDB(){
-       return  ((BaseApplication)(getActivity().getApplicationContext())).getDB();
+    public AppDatabase getDB() {
+        return ((BaseActivity) (getActivity())).getBaseApplication().getDB();
     }
 
-    public List<RoomItem> getRoomItemList(){
-        return  ((BaseApplication)(getActivity().getApplicationContext())).getRoomItemList();
+    public BaseApplication getBaseApplication() {
+        return ((BaseActivity) (getActivity())).getBaseApplication();
+    }
+
+    public List<RoomItem> getRoomItemList() {
+        return ((BaseActivity) (getActivity())).getBaseApplication().getRoomItemList();
     }
 }

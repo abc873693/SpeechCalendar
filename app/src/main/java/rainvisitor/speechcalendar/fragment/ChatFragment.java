@@ -14,7 +14,6 @@ import com.stfalcon.chatkit.messages.MessagesList;
 import com.stfalcon.chatkit.messages.MessagesListAdapter;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import butterknife.BindView;
@@ -22,36 +21,21 @@ import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import rainvisitor.speechcalendar.R;
 import rainvisitor.speechcalendar.base.BaseFragment;
-import rainvisitor.speechcalendar.model.Author;
 import rainvisitor.speechcalendar.model.Message;
 
 public class ChatFragment extends BaseFragment {
-
 
     @BindView(R.id.messagesList)
     MessagesList messagesList;
     Unbinder unbinder;
     private View view;
 
-    private Author assistant, user;
     public MessagesListAdapter<Message> adapter;
 
     public List<Message> messages = new ArrayList<>();
 
-    private String userID = "11111";
-    private String assistantID = "99999";
-
-    private String Word;
-
     public ChatFragment() {
 
-    }
-
-    public void setWord(String Word) {
-        if (Word == null) {
-            return;
-        }
-        this.Word = Word;
     }
 
     @Nullable
@@ -61,8 +45,6 @@ public class ChatFragment extends BaseFragment {
         view = inflater.inflate(R.layout.fragment_chat, container, false);
         restoreArgs(savedInstanceState);
         unbinder = ButterKnife.bind(this, view);
-        if (!Word.equals(""))
-            getDB().messageDao().insertAll(new Message(userID, Word, new Date().getTime()));
         setView();
         return view;
     }
@@ -82,9 +64,13 @@ public class ChatFragment extends BaseFragment {
     }
 
     private void setView() {
-        assistant = new Author(assistantID, "Assistant", "Assistant");
-        user = new Author(userID, "user", "user");
         messages = getDB().messageDao().getAll();
+        for (Message message : messages) {
+            if (message.getId().equals(getBaseApplication().getUser().getId()))
+                message.setAuthor(getBaseApplication().getUser());
+            if (message.getId().equals(getBaseApplication().getAssistant().getId()))
+                message.setAuthor(getBaseApplication().getAssistant());
+        }
         ImageLoader imageLoader = new ImageLoader() {
             @Override
             public void loadImage(ImageView imageView, String url) {
@@ -97,8 +83,8 @@ public class ChatFragment extends BaseFragment {
 
         };
         MessagesListAdapter.HoldersConfig holdersConfig = new MessagesListAdapter.HoldersConfig();
-        adapter = new MessagesListAdapter<>(userID, holdersConfig, imageLoader);
-        adapter.addToEnd(messages, false);
+        adapter = new MessagesListAdapter<>(getBaseApplication().getUser().getId(), holdersConfig, imageLoader);
+        adapter.addToEnd(messages, true);
         messagesList.setAdapter(adapter);
     }
 

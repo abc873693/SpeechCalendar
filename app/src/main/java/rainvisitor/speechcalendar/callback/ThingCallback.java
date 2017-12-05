@@ -13,7 +13,7 @@ public class ThingCallback {
 
     }
 
-    public void needVoice(Boolean flagThing, Boolean flagTime) {
+    public void needVoice(String message) {
 
     }
 

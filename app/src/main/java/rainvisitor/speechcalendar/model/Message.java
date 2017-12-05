@@ -24,7 +24,7 @@ public class Message implements IMessage {
 
     //ID == userID
     @ColumnInfo(name = "ID")
-    private String id;
+    private String id = "";
 
     @ColumnInfo(name = "text")
     private String text;
