@@ -67,6 +67,8 @@ public class MainActivity extends BaseActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         setView();
+        Intent intent = new Intent(this, DeviceService.class);
+        startService(intent);
     }
 
     private void setView() {

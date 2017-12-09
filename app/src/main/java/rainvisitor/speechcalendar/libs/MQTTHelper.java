@@ -21,6 +21,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import rainvisitor.speechcalendar.callback.BackgroundCallback;
 import rainvisitor.speechcalendar.callback.GeneralCallback;
 import rainvisitor.speechcalendar.callback.RoomCallback;
 import rainvisitor.speechcalendar.model.RoomItem;
@@ -115,6 +116,79 @@ public class MQTTHelper {
                 for (RoomItem item : roomItems) {
                     topicList.add(item.getTopic());
                 }
+                Topic[] topics = topicList.toArray(new Topic[topicList.size()]);
+                connection.subscribe(topics, new Callback<byte[]>() {
+                    public void onSuccess(byte[] qoses) {
+                        Log.e("onSuccess", "subscribe");
+                        // The result of the subscribe request.
+                        String sh = null;
+                        try {
+                            sh = new String(qoses, "US-ASCII");
+                        } catch (UnsupportedEncodingException e) {
+                            e.printStackTrace();
+                        }
+                        Log.e("messageh", sh);
+                    }
+
+                    public void onFailure(Throwable value) {
+                        //connection.close(null); // subscribe failed.
+                    }
+                });
+                // Send a message to a topic
+            }
+        });
+    }
+
+    public static void subscribe(final List<Topic> topicList, final BackgroundCallback callback) {
+        connection.listener(new Listener() {
+
+            public void onDisconnected() {
+            }
+
+            public void onConnected() {
+            }
+
+            public void onPublish(UTF8Buffer topic, Buffer payload, Runnable ack) {
+
+                // You can now process a received message from a topic.
+                // Once process execute the ack runnable.
+                ack.run();
+                String data = null, topicText = null;
+                try {
+                    data = new String(payload.getData(), "UTF8");
+                    topicText = new String(topic.getData(), "UTF8");
+                } catch (UnsupportedEncodingException e) {
+                    callback.onFailure(e);
+                }
+                assert data != null;
+                int start = data.indexOf('{');
+                if (start == -1) return;
+                final String content = data.substring(start);
+                final String finalTopicText = topicText;
+                assert finalTopicText != null;
+                if (finalTopicText.contains(TOPIC_SENSOR)) {
+                    final SensorResponse roomInfoResponse = new Gson().fromJson(content, SensorResponse.class);
+                    callback.onResponse(roomInfoResponse);
+                    if (MQTTHelper.generalCallback != null)
+                        MQTTHelper.generalCallback.onSuccess();
+                }
+            }
+
+            public void onFailure(Throwable value) {
+                // connection.close(null); // a connection failure occured.
+                callback.onFailure(value);
+            }
+        });
+        connection.connect(new Callback<Void>() {
+            public void onFailure(Throwable value) {
+                //  result.failure(value); // If we could not connect to the server.
+                callback.onFailure(value);
+            }
+
+            // Once we connect..
+            public void onSuccess(Void v) {
+                Log.e("onSuccess", "connect");
+                // Subscribe to a topic
                 Topic[] topics = topicList.toArray(new Topic[topicList.size()]);
                 connection.subscribe(topics, new Callback<byte[]>() {
                     public void onSuccess(byte[] qoses) {
