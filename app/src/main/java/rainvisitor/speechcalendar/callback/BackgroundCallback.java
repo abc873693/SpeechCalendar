@@ -1,6 +1,6 @@
 package rainvisitor.speechcalendar.callback;
 
-import rainvisitor.speechcalendar.model.SensorResponse;
+import rainvisitor.speechcalendar.model.CallbackResponse;
 
 /**
  * Created by Ray on 2017/12/5.
@@ -14,5 +14,5 @@ public abstract class BackgroundCallback {
 
     public abstract void onFailure(Exception e);
 
-    public abstract void onResponse(SensorResponse response);
+    public abstract void onResponse(CallbackResponse response);
 }

@@ -9,7 +9,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import rainvisitor.speechcalendar.api.models.Dictionary;
+import rainvisitor.speechcalendar.model.Dictionary;
 import rainvisitor.speechcalendar.callback.ThingCallback;
 
 /**
@@ -20,7 +20,7 @@ public class ThingHelper {
 
     private static final String TAG = "ThingHelper";
 
-    public static int position = -1;
+    public static int position = 0;
 
     public static int state = 0;
 
@@ -34,6 +34,7 @@ public class ThingHelper {
     public static final int addSchedule = 7;
     public static final int unKnownCommand = 8;
 
+    private static final String device = "device";
     private static final String verb = "v";
     private static final String time = "t";  //時間
     private static final String mTime = "m";  //時間
@@ -95,7 +96,7 @@ public class ThingHelper {
                             analysisHardwareControl();
                             break;
                         case receiveVoice:
-                            Log.d(TAG, "receiveVoice");
+                            //Log.d(TAG, "receiveVoice");
                             break;
                         case analysisIsTimeAndPurpose:
                             Log.d(TAG, "analysisIsTimeAndPurpose");
@@ -166,7 +167,13 @@ public class ThingHelper {
             return;
         }
         Log.e("value", " " + values.toString());
-        List<String> hardware = getHardwareKey(words.get(0));
+        List<String> hardware = new ArrayList<>();
+        for (Dictionary dictionary : ThingHelper.dictionaryList) {
+            if (dictionary.getFlag().equals(device)) {
+                hardware.add(dictionary.getWord());
+                dictionaryHasMeanList.add(dictionary);
+            }
+        }
         if (hardware.size() == 0) {
             state = unKnownCommand;
             return;
@@ -238,7 +245,7 @@ public class ThingHelper {
                 flagThing = true;
                 thing = "";
                 analysisHardwareControl();
-                if (!isHardwareControl) {
+                if (isHardwareControl) {
                     for (Dictionary dictionary : dictionaryList) {
                         thing = String.format("%s%s", thing, dictionary.getWord());
                     }
@@ -247,6 +254,7 @@ public class ThingHelper {
                 }
             }
         }
+        Log.d("AnalysisTimeAndPurpose", flagThing + " " + flagTime);
         if (flagThing && flagTime) {
             if (isHardwareControl) {
                 state = hardwareControlStroke;
@@ -255,7 +263,6 @@ public class ThingHelper {
             }
         } else {
             errorAnalysisTimeAndPurpose++;
-            Log.d("AnalysisTimeAndPurpose", flagThing + " " + flagTime);
             if (errorAnalysisTimeAndPurpose > 5) {
                 state = unKnownCommand;
                 return;
@@ -345,7 +352,13 @@ public class ThingHelper {
                 if (time.getWord().length() == 1) {
                     continue;
                 }
-                int number = Utils.convertChineseNumber(time.getWord().substring(0, time.getWord().length() - 1));
+                String strNumber = time.getWord().substring(0, time.getWord().length() - 1);
+                int number;
+                try {
+                    number = Integer.parseInt(strNumber);
+                } catch (Exception e) {
+                    number = Utils.convertChineseNumber(time.getWord().substring(0, time.getWord().length() - 1));
+                }
                 if (number == -1) {
                     error++;
                     continue;

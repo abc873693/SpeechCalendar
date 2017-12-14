@@ -30,6 +30,9 @@ public interface EventDao {
     List<Event> getByDate(String date);*/
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
+    long insert(Event Event);
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(Event... Events);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

@@ -28,6 +28,8 @@ import rainvisitor.speechcalendar.model.TV;
 
 public class BaseApplication extends Application {
 
+    private MQTTHelper mqttHelper;
+
     private VoiceCallback voiceCallback;
 
     private List<RoomItem> roomItemList;
@@ -46,7 +48,7 @@ public class BaseApplication extends Application {
     public void onCreate() {
         super.onCreate();
         initRoomDatabase();
-        MQTTHelper.init();
+        mqttHelper = new MQTTHelper();
         setDeviceData();
     }
 
@@ -59,9 +61,13 @@ public class BaseApplication extends Application {
         roomItemList = new ArrayList<>();
         roomItemList.add(new RoomInfo("即時資訊", new Topic(MQTTHelper.TOPIC_SENSOR, QoS.EXACTLY_ONCE)));
         roomItemList.add(new LightDimming("調光燈", new Topic(MQTTHelper.TOPIC_LIGHT_DIMMING, QoS.EXACTLY_ONCE)));
-        roomItemList.add(new LightSwitch("層板燈", new Topic(MQTTHelper.TOPIC_LIGHT_SWITCH, QoS.EXACTLY_ONCE)));
+        roomItemList.add(new LightSwitch("電燈", new Topic(MQTTHelper.TOPIC_LIGHT_SWITCH, QoS.EXACTLY_ONCE)));
         roomItemList.add(new TV("電視", new Topic(MQTTHelper.TOPIC_TV, QoS.EXACTLY_ONCE)));
         roomItemList.add(new AirConditioner("冷氣", new Topic(MQTTHelper.TOPIC_AIR_CONDITIONER, QoS.EXACTLY_ONCE)));
+    }
+
+    public MQTTHelper getMqttHelper() {
+        return mqttHelper;
     }
 
     public AppDatabase getDB() {

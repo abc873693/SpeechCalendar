@@ -1,4 +1,4 @@
-package rainvisitor.speechcalendar.api.models;
+package rainvisitor.speechcalendar.model;
 
 import com.google.gson.annotations.SerializedName;
 

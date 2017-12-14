@@ -3,7 +3,7 @@ package rainvisitor.speechcalendar.callback;
 import java.io.IOException;
 import java.util.List;
 
-import rainvisitor.speechcalendar.api.models.Dictionary;
+import rainvisitor.speechcalendar.model.Dictionary;
 
 /**
  * Created by Ray on 2017/9/22.

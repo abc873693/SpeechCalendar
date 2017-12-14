@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
 import com.roughike.bottombar.BottomBar;
 import com.roughike.bottombar.OnTabSelectListener;
 
@@ -26,17 +27,22 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import rainvisitor.speechcalendar.adapter.ChoiceAdapter;
-import rainvisitor.speechcalendar.api.Helper;
-import rainvisitor.speechcalendar.api.models.Dictionary;
 import rainvisitor.speechcalendar.base.BaseActivity;
 import rainvisitor.speechcalendar.callback.DictionariesCallback;
+import rainvisitor.speechcalendar.callback.GeneralCallback;
 import rainvisitor.speechcalendar.callback.ThingCallback;
+import rainvisitor.speechcalendar.callback.VoiceCallback;
 import rainvisitor.speechcalendar.fragment.ChatFragment;
 import rainvisitor.speechcalendar.fragment.EventFragment;
 import rainvisitor.speechcalendar.fragment.RoomFragment;
+import rainvisitor.speechcalendar.libs.Helper;
+import rainvisitor.speechcalendar.libs.MQTTHelper;
 import rainvisitor.speechcalendar.libs.ThingHelper;
 import rainvisitor.speechcalendar.libs.Utils;
 import rainvisitor.speechcalendar.model.Choice;
+import rainvisitor.speechcalendar.model.Dictionary;
+import rainvisitor.speechcalendar.model.Event;
+import rainvisitor.speechcalendar.model.ReserveRequest;
 
 import static rainvisitor.speechcalendar.libs.ThingHelper.analysisIsTimeAndPurpose;
 import static rainvisitor.speechcalendar.libs.ThingHelper.receiveVoice;
@@ -61,6 +67,8 @@ public class MainActivity extends BaseActivity {
     @BindView(R.id.bottomBar)
     BottomBar bottomBar;
 
+    public static GeneralCallback generalCallback = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,6 +77,8 @@ public class MainActivity extends BaseActivity {
         setView();
         Intent intent = new Intent(this, DeviceService.class);
         startService(intent);
+        /*long id = getDB().eventDao().insert(new Event("開啟電視", new Date().getTime(), new Date().getTime(), 0));
+        Log.e("id", id + "");*/
     }
 
     private void setView() {
@@ -122,6 +132,8 @@ public class MainActivity extends BaseActivity {
 
     private void thingWork(final List<String> Words, final List<Dictionary> response) {
         state = ThingHelper.analysisIsArrange;
+        getBaseApplication().addUserMessage(Words.get(ThingHelper.position));
+        changeTab(R.id.tab_chat);
         ThingHelper.send(this, Words, response, new ThingCallback() {
             @Override
             public void unKnownCommand(final List<String> words) {
@@ -138,7 +150,7 @@ public class MainActivity extends BaseActivity {
                             openSpeaker("請問你想做啥?");
                         } else {
                             ThingHelper.position = position;
-                            thingWork(Words, response);
+                            searchWord(Words);
                         }
                     }
                 }).show();
@@ -148,9 +160,35 @@ public class MainActivity extends BaseActivity {
             public void hardwareControl(String name, int value) {
                 super.hardwareControl(name, value);
                 Log.e("hardwareControl", name + " " + value);
-                String motion = value == 1 ? "開啟" : "關閉";
-                getBaseApplication().addUserMessage(ThingHelper.words.get(0));
-                getBaseApplication().addAssistantMessage("已" + motion + " " + name);
+                String motion;
+                String topic = Utils.deviceConvertToTopic(name);
+                if (topic != null) {
+                    switch (topic) {
+                        case MQTTHelper.TOPIC_AIR_CONDITIONER:
+                        case MQTTHelper.TOPIC_TV:
+                        case MQTTHelper.TOPIC_LIGHT_SWITCH:
+                            motion = (value == 1 ? "開啟" : "關閉") + " " + name;
+                            break;
+                        default:
+                            motion = (value == 1 ? "調亮" : "調暗") + " " + name;
+                            break;
+                    }
+                    getBaseApplication().addAssistantMessage("已" + motion);
+                    String cmd;
+                    switch (topic) {
+                        case MQTTHelper.TOPIC_AIR_CONDITIONER:
+                        case MQTTHelper.TOPIC_TV:
+                        case MQTTHelper.TOPIC_LIGHT_SWITCH:
+                            cmd = value == 1 ? "ON" : "OFF";
+                            break;
+                        default:
+                            cmd = value == 1 ? "1" : "0";
+                            break;
+                    }
+                    getBaseApplication().getMqttHelper().publish(MainActivity.this, Utils.deviceConvertToTopic(name), cmd);
+                } else {
+                    getBaseApplication().addAssistantMessage("錯誤");
+                }
                 changeTab(R.id.tab_chat);
             }
 
@@ -158,11 +196,41 @@ public class MainActivity extends BaseActivity {
             public void hardwareStroke(String name, int value, Date time) {
                 super.hardwareStroke(name, value, time);
                 Log.e("hardwareStroke", name + " " + value + " " + time);
-                String motion = value == 1 ? "開啟" : "關閉";
-                getBaseApplication().addUserMessage(ThingHelper.words.get(0));
-                getBaseApplication().addAssistantMessage(String.format("已預約\n%s\n%s %s", Utils.ConvertTime(time), motion, name));
-                getBaseApplication().addAssistantMessage("測試");
+                String motion;
+                String topic = Utils.deviceConvertToTopic(name);
+                if (topic != null) {
+                    switch (topic) {
+                        case MQTTHelper.TOPIC_AIR_CONDITIONER:
+                        case MQTTHelper.TOPIC_TV:
+                        case MQTTHelper.TOPIC_LIGHT_SWITCH:
+                            motion = (value == 1 ? "開啟" : "關閉") + " " + name;
+                            break;
+                        default:
+                            motion = (value == 1 ? "調亮" : "調暗") + " " + name;
+                            break;
+                    }
+                    getBaseApplication().addAssistantMessage(String.format("已預約\n%s\n%s", Utils.ConvertTime(time), motion));
+                    Event event = new Event(motion, new Date().getTime(), time.getTime(), 0);
+                    long id = getBaseApplication().getDB().eventDao().insert(event);
+                    ReserveRequest reserveRequest = new ReserveRequest(event);
+                    reserveRequest.setID(id + "");
+                    switch (topic) {
+                        case MQTTHelper.TOPIC_AIR_CONDITIONER:
+                        case MQTTHelper.TOPIC_TV:
+                        case MQTTHelper.TOPIC_LIGHT_SWITCH:
+                            reserveRequest.setCMD(value == 1 ? "ON" : "OFF");
+                            break;
+                        default:
+                            reserveRequest.setCMD(value == 1 ? "1" : "0");
+                            break;
+                    }
+                    //TODO: TOPIC錯誤
+                    getBaseApplication().getMqttHelper().publish(MainActivity.this, Utils.deviceConvertToReserveTopic(name), new Gson().toJson(reserveRequest));
+                } else {
+                    getBaseApplication().addAssistantMessage("錯誤");
+                }
                 changeTab(R.id.tab_chat);
+
             }
 
             @Override
@@ -189,8 +257,7 @@ public class MainActivity extends BaseActivity {
             @Override
             public void needVoice(String message) {
                 super.needVoice(message);
-                getBaseApplication().addUserMessage(ThingHelper.words.get(0));
-                /*getBaseApplication().setVoiceCallback(new VoiceCallback() {
+                getBaseApplication().setVoiceCallback(new VoiceCallback() {
                     @Override
                     public void onSuccess(final List<String> words) {
                         super.onSuccess(words);
@@ -212,9 +279,9 @@ public class MainActivity extends BaseActivity {
                             }
                         });
                     }
-                });*/
+                });
                 openSpeaker(message);
-                final List<String> words = new ArrayList<>();
+                /*final List<String> words = new ArrayList<>();
                 words.add("現在");
                 Helper.get(MainActivity.this, words.get(0), new DictionariesCallback() {
                     @Override
@@ -232,7 +299,7 @@ public class MainActivity extends BaseActivity {
                         ThingHelper.dictionaryList = response;
                         state = analysisIsTimeAndPurpose;
                     }
-                });
+                });*/
             }
         });
     }
@@ -241,7 +308,7 @@ public class MainActivity extends BaseActivity {
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.fab:
-                /*getBaseApplication().setVoiceCallback(new VoiceCallback(){
+                getBaseApplication().setVoiceCallback(new VoiceCallback(){
                     @Override
                     public void onSuccess(final List<String> words) {
                         super.onSuccess(words);
@@ -267,17 +334,17 @@ public class MainActivity extends BaseActivity {
                             }
                         });
                     }
-                });*/
-                //openSpeaker("請說話...");
-                ArrayList<String> result = new ArrayList<>();
-                result.add("下午中午");
-                searchWord(result);
+                });
+                openSpeaker("請說話...");
+                /*ArrayList<String> result = new ArrayList<>();
+                result.add("幫我安排關閉電燈在十二點五分");
+                searchWord(result);*/
                 break;
         }
     }
 
-    private void searchWord(final ArrayList<String> result) {
-        Helper.get(MainActivity.this, result.get(0), new DictionariesCallback() {
+    private void searchWord(final List<String> result) {
+        Helper.get(MainActivity.this, result.get(ThingHelper.position), new DictionariesCallback() {
             @Override
             public void onFailure(IOException e) {
                 super.onFailure(e);

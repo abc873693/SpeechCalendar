@@ -39,6 +39,38 @@ public class Utils {
         return alertDialog;
     }
 
+    public static String deviceConvertToTopic(String name) {
+        switch (name) {
+            case "冷氣":
+                return MQTTHelper.TOPIC_AIR_CONDITIONER;
+            case "電視":
+                return MQTTHelper.TOPIC_TV;
+            case "可調燈":
+                return MQTTHelper.TOPIC_LIGHT_DIMMING;
+            case "層板燈":
+            case "電燈":
+                return MQTTHelper.TOPIC_LIGHT_SWITCH;
+            default:
+                return null;
+        }
+    }
+
+    public static String deviceConvertToReserveTopic(String name) {
+        switch (name) {
+            case "冷氣":
+                return MQTTHelper.TOPIC_RESERVE_AIR_CONDITIONER;
+            case "電視":
+                return MQTTHelper.TOPIC_RESERVE_TV;
+            case "可調燈":
+                return MQTTHelper.TOPIC_RESERVE_LIGHT_DIMMING;
+            case "層板燈":
+            case "電燈":
+                return MQTTHelper.TOPIC_RESERVE_LIGHT_SWITCH;
+            default:
+                return null;
+        }
+    }
+
     public static List<Choice> CovertWord(List<String> Words) {
         List<Choice> choices = new ArrayList<>();
         for (String s : Words) {

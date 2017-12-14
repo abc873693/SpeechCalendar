@@ -19,6 +19,7 @@ public class BaseActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initApp();
+        getBaseApplication().getMqttHelper().subscribe(this, getBaseApplication().getRoomItemList());
         Log.d("onCreate", "initApp" + (getBaseApplication() == null));
     }
 
