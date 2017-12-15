@@ -21,12 +21,12 @@ import rainvisitor.speechcalendar.callback.DictionariesCallback;
 
 public class Helper {
 
-    /*//內部
+    //內部
     private static final String HOST = "192.168.200.50";
-    private static final String PORT = "81";*/
-    //外部
+    private static final String PORT = "81";
+    /*//外部
     private static final String HOST = "pj.icp-si.com";
-    private static final String PORT = "64503";
+    private static final String PORT = "64503";*/
 
     private static final String API_DICTIONARIES = "/api/Dictionaries";
 

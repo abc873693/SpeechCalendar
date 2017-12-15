@@ -41,12 +41,12 @@ public class MQTTHelper {
 
     private static GeneralCallback generalCallback = null;
 
-    /*//內部
+    //內部
     private static final String HOST = "192.168.200.50";
-    private static final int PORT = 1883;*/
+    private static final int PORT = 1883;
     //外部
-    private static final String HOST = "pj.icp-si.com";
-    private static final int PORT = 64502;
+    /*private static final String HOST = "pj.icp-si.com";
+    private static final int PORT = 64502;*/
 
     public static final String TOPIC_SENSOR = "demo/home/1709181907/sensor";
     public static final String TOPIC_LIGHT_SWITCH = "demo/home/1709181907/BattenLighting";

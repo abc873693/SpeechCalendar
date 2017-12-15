@@ -46,6 +46,7 @@ public class Utils {
             case "電視":
                 return MQTTHelper.TOPIC_TV;
             case "可調燈":
+            case "調光燈":
                 return MQTTHelper.TOPIC_LIGHT_DIMMING;
             case "層板燈":
             case "電燈":
@@ -62,6 +63,7 @@ public class Utils {
             case "電視":
                 return MQTTHelper.TOPIC_RESERVE_TV;
             case "可調燈":
+            case "調光燈":
                 return MQTTHelper.TOPIC_RESERVE_LIGHT_DIMMING;
             case "層板燈":
             case "電燈":
