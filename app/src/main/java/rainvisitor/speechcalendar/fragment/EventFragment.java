@@ -9,8 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import butterknife.BindView;
@@ -19,8 +17,6 @@ import butterknife.Unbinder;
 import rainvisitor.speechcalendar.R;
 import rainvisitor.speechcalendar.adapter.EventAdapter;
 import rainvisitor.speechcalendar.base.BaseFragment;
-import rainvisitor.speechcalendar.libs.DB;
-import rainvisitor.speechcalendar.model.DBItem;
 import rainvisitor.speechcalendar.model.Event;
 
 public class EventFragment extends BaseFragment {
@@ -71,7 +67,7 @@ public class EventFragment extends BaseFragment {
         getDB().insert(DB.EVENT_TABLE_NAME, new DBItem(0, "開啟 層板燈", new Date().getTime(), calendar.getTimeInMillis(), Event.Status.FINISHED.ordinal()));
         calendar.set(2017, 9, 17, 8, 0);
         getDB().insert(DB.EVENT_TABLE_NAME, new DBItem(1, "關閉 冷氣", new Date().getTime(), calendar.getTimeInMillis(), Event.Status.NORMAL.ordinal()));*/
-        eventList = parseEventData(getDB().getAll(DB.EVENT_TABLE_NAME));
+        eventList = getDB().eventDao().getAll();
         eventAdapter = new EventAdapter(getActivity(), eventList, new EventAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(Event item, int position) {
@@ -86,14 +82,5 @@ public class EventFragment extends BaseFragment {
     public void onDestroyView() {
         super.onDestroyView();
         unbinder.unbind();
-    }
-
-    private List<Event> parseEventData(List<DBItem> eventList) {
-        List<Event> events = new ArrayList<>();
-        for (int i = eventList.size() - 1; i >= 0; i--) {
-            DBItem dbItem = eventList.get(i);
-            events.add(new Event(dbItem.getID(), dbItem.getText(), new Date(dbItem.getAddTime()), new Date(dbItem.getTime()), dbItem.getStatus()));
-        }
-        return events;
     }
 }

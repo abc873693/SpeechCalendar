@@ -1,28 +1,43 @@
 package rainvisitor.speechcalendar.model;
 
-import java.util.Date;
+import android.arch.persistence.room.ColumnInfo;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.PrimaryKey;
 
 /**
  * Created by Ray on 2017/10/5.
  */
 
+@Entity
 public class Event {
 
     public enum  Status {
         NORMAL ,FINISHED , ERROR
     }
 
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "ID")
     private int ID;
+
+    @ColumnInfo(name = "Text")
     private String Text;
-    private Date AddTime;
-    private Date Time;
+
+    @ColumnInfo(name = "AddTime")
+    private long AddTime;
+
+    @ColumnInfo(name = "Time")
+    private long Time;
+
+    @ColumnInfo(name = "Status")
     private int Status;
 
-    public Event(int ID, String text, Date addTime, Date time, int status) {
-        this.ID = ID;
+    public Event() {
+    }
+
+    public Event(String text, long addTime, long time, int status) {
         Text = text;
         AddTime = addTime;
-        this.Time = time;
+        Time = time;
         Status = status;
     }
 
@@ -42,19 +57,19 @@ public class Event {
         Text = text;
     }
 
-    public Date getAddTime() {
+    public long getAddTime() {
         return AddTime;
     }
 
-    public void setAddTime(Date addTime) {
+    public void setAddTime(long addTime) {
         AddTime = addTime;
     }
 
-    public Date getTime() {
+    public long getTime() {
         return Time;
     }
 
-    public void setTime(Date time) {
+    public void setTime(long time) {
         Time = time;
     }
 

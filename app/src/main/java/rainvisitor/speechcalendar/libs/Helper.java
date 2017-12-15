@@ -1,4 +1,4 @@
-package rainvisitor.speechcalendar.api;
+package rainvisitor.speechcalendar.libs;
 
 import android.app.Activity;
 import android.support.annotation.NonNull;
@@ -12,7 +12,7 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import rainvisitor.speechcalendar.api.models.DictionariesResponse;
+import rainvisitor.speechcalendar.model.DictionariesResponse;
 import rainvisitor.speechcalendar.callback.DictionariesCallback;
 
 /**
@@ -21,14 +21,17 @@ import rainvisitor.speechcalendar.callback.DictionariesCallback;
 
 public class Helper {
 
-    private static String HOST = "http://alanting.sunyorkos.com:";
+    /*//內部
+    private static final String HOST = "192.168.200.50";
+    private static final String PORT = "81";*/
+    //外部
+    private static final String HOST = "pj.icp-si.com";
+    private static final String PORT = "64503";
 
-    private static String PORT = "63050";
-
-    private static String API_DICTIONARIES = "/api/Dictionaries";
+    private static final String API_DICTIONARIES = "/api/Dictionaries";
 
     public static void get(final android.content.Context context, final String word, final DictionariesCallback dictionariesCallback) {
-        String URL = HOST + PORT + API_DICTIONARIES + "?Type=0&Word=" + word;
+        String URL = "http://" + HOST + ":" + PORT + API_DICTIONARIES + "?Type=0&Word=" + word;
         OkHttpClient mOkHttpClient = new OkHttpClient();
         Request request = new Request.Builder()
                 .get()

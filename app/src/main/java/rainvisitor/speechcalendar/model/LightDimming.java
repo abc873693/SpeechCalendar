@@ -25,11 +25,11 @@ public class LightDimming extends RoomItem {
     }
 
     public int getStep() {
-        if (value == 0) return 0;
-        if (value <= 27000) return 1;
-        if (value <= 28000) return 2;
-        if (value <= 29000) return 3;
-        if (value <= 30000) return 4;
+        if (value < 7500) return 0;
+        if (value < 8000) return 1;
+        if (value < 8500) return 2;
+        if (value < 9000) return 3;
+        if (value < 9500) return 4;
         return 5;
     }
 

@@ -10,11 +10,11 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
 import com.roughike.bottombar.BottomBar;
 import com.roughike.bottombar.OnTabSelectListener;
 
@@ -27,23 +27,29 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import rainvisitor.speechcalendar.adapter.ChoiceAdapter;
-import rainvisitor.speechcalendar.api.Helper;
-import rainvisitor.speechcalendar.api.models.Dictionary;
+import rainvisitor.speechcalendar.base.BaseActivity;
 import rainvisitor.speechcalendar.callback.DictionariesCallback;
+import rainvisitor.speechcalendar.callback.GeneralCallback;
 import rainvisitor.speechcalendar.callback.ThingCallback;
+import rainvisitor.speechcalendar.callback.VoiceCallback;
 import rainvisitor.speechcalendar.fragment.ChatFragment;
 import rainvisitor.speechcalendar.fragment.EventFragment;
 import rainvisitor.speechcalendar.fragment.RoomFragment;
+import rainvisitor.speechcalendar.libs.Helper;
+import rainvisitor.speechcalendar.libs.MQTTHelper;
 import rainvisitor.speechcalendar.libs.ThingHelper;
 import rainvisitor.speechcalendar.libs.Utils;
 import rainvisitor.speechcalendar.model.Choice;
+import rainvisitor.speechcalendar.model.Dictionary;
+import rainvisitor.speechcalendar.model.Event;
+import rainvisitor.speechcalendar.model.ReserveRequest;
 
 import static rainvisitor.speechcalendar.libs.ThingHelper.analysisIsTimeAndPurpose;
 import static rainvisitor.speechcalendar.libs.ThingHelper.receiveVoice;
 import static rainvisitor.speechcalendar.libs.ThingHelper.state;
 import static rainvisitor.speechcalendar.libs.ThingHelper.wait;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
     private static final int TAG_FRAGMENT_CHAT = 0;
     private static final int TAG_FRAGMENT_ROOM = 1;
@@ -51,17 +57,17 @@ public class MainActivity extends AppCompatActivity {
 
     private final int REQUEST_VOICE_RECOGNIZE = 1;
 
-    private String Word = "";
-
     private FragmentManager manager;
     private FragmentTransaction transaction;
 
     @BindView(R.id.fab)
-    FloatingActionButton fab_call_mic;
+    FloatingActionButton fabCallMic;
     @BindView(R.id.content_main)
     CoordinatorLayout contentMain;
     @BindView(R.id.bottomBar)
     BottomBar bottomBar;
+
+    public static GeneralCallback generalCallback = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +75,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         setView();
+        Intent intent = new Intent(this, DeviceService.class);
+        startService(intent);
+        /*long id = getDB().eventDao().insert(new Event("開啟電視", new Date().getTime(), new Date().getTime(), 0));
+        Log.e("id", id + "");*/
     }
 
     private void setView() {
@@ -86,7 +96,6 @@ public class MainActivity extends AppCompatActivity {
         switch (tabId) {
             case R.id.tab_chat:
                 ChatFragment chatFragment = new ChatFragment();
-                chatFragment.setWord(Word);
                 transaction.replace(R.id.content_main, chatFragment, TAG_FRAGMENT_CHAT + "");
                 break;
             case R.id.tab_room:
@@ -113,54 +122,115 @@ public class MainActivity extends AppCompatActivity {
                     all = all + r + "\n";
                 }
                 if (result.size() > 0) {
-                    Word = result.get(0);
                     changeTab(R.id.tab_chat);
-                    searchWord(result);
-                    Word = "";
+                    getBaseApplication().getVoiceCallback().onSuccess(result);
                 }
                 Log.d("resultCode", all);
             }
         }
     }
 
-    private void searchWord(final ArrayList<String> Words) {
-        Log.d("searchWord", Words.get(0));
-        Helper.get(this, Words.get(0), new DictionariesCallback() {
-            @Override
-            public void onFailure(IOException e) {
-                super.onFailure(e);
-                e.printStackTrace();
-            }
-
-            @Override
-            public void onSuccess(String word, List<Dictionary> response) {
-                super.onSuccess(word, response);
-                Log.e("onSuccess", response.toString());
-                if (state == wait) {
-                    thingWork(Words, response);
-                } else if (state == receiveVoice) {
-                    ThingHelper.oldWords = ThingHelper.words;
-                    ThingHelper.words = Words;
-                    ThingHelper.dictionaryList = response;
-                    state = analysisIsTimeAndPurpose;
-                }
-            }
-        });
-    }
-
-    private void thingWork(List<String> Words, List<Dictionary> response) {
+    private void thingWork(final List<String> Words, final List<Dictionary> response) {
         state = ThingHelper.analysisIsArrange;
+        getBaseApplication().addUserMessage(Words.get(ThingHelper.position));
+        changeTab(R.id.tab_chat);
         ThingHelper.send(this, Words, response, new ThingCallback() {
             @Override
-            public void unKnownCommand(List<String> commands) {
-                super.unKnownCommand(commands);
+            public void unKnownCommand(final List<String> words) {
+                super.unKnownCommand(words);
                 Log.d("ThingHelper", "unKnownCommand");
+                final List<String> commands = new ArrayList<>();
+                commands.addAll(words);
+                commands.add("再說一次");
                 Utils.createChoiceDialog(MainActivity.this, "無法解析 請問您是哪種意思?", Utils.CovertWord(commands), new ChoiceAdapter.OnItemClickListener() {
                     @Override
                     public void onItemClick(Choice item, int position) {
-
+                        if (position == commands.size() - 1) {
+                            state = wait;
+                            openSpeaker("請問你想做啥?");
+                        } else {
+                            ThingHelper.position = position;
+                            searchWord(Words);
+                        }
                     }
                 }).show();
+            }
+
+            @Override
+            public void hardwareControl(String name, int value) {
+                super.hardwareControl(name, value);
+                Log.e("hardwareControl", name + " " + value);
+                String motion;
+                String topic = Utils.deviceConvertToTopic(name);
+                if (topic != null) {
+                    switch (topic) {
+                        case MQTTHelper.TOPIC_AIR_CONDITIONER:
+                        case MQTTHelper.TOPIC_TV:
+                        case MQTTHelper.TOPIC_LIGHT_SWITCH:
+                            motion = (value == 1 ? "開啟" : "關閉") + " " + name;
+                            break;
+                        default:
+                            motion = (value == 1 ? "調亮" : "調暗") + " " + name;
+                            break;
+                    }
+                    getBaseApplication().addAssistantMessage("已" + motion);
+                    String cmd;
+                    switch (topic) {
+                        case MQTTHelper.TOPIC_AIR_CONDITIONER:
+                        case MQTTHelper.TOPIC_TV:
+                        case MQTTHelper.TOPIC_LIGHT_SWITCH:
+                            cmd = value == 1 ? "ON" : "OFF";
+                            break;
+                        default:
+                            cmd = value == 1 ? "1" : "0";
+                            break;
+                    }
+                    getBaseApplication().getMqttHelper().publish(MainActivity.this, Utils.deviceConvertToTopic(name), cmd);
+                } else {
+                    getBaseApplication().addAssistantMessage("錯誤");
+                }
+                changeTab(R.id.tab_chat);
+            }
+
+            @Override
+            public void hardwareStroke(String name, int value, Date time) {
+                super.hardwareStroke(name, value, time);
+                Log.e("hardwareStroke", name + " " + value + " " + time);
+                String motion;
+                String topic = Utils.deviceConvertToTopic(name);
+                if (topic != null) {
+                    switch (topic) {
+                        case MQTTHelper.TOPIC_AIR_CONDITIONER:
+                        case MQTTHelper.TOPIC_TV:
+                        case MQTTHelper.TOPIC_LIGHT_SWITCH:
+                            motion = (value == 1 ? "開啟" : "關閉") + " " + name;
+                            break;
+                        default:
+                            motion = (value == 1 ? "調亮" : "調暗") + " " + name;
+                            break;
+                    }
+                    getBaseApplication().addAssistantMessage(String.format("已預約\n%s\n%s", Utils.ConvertTime(time), motion));
+                    Event event = new Event(motion, new Date().getTime(), time.getTime(), 0);
+                    long id = getBaseApplication().getDB().eventDao().insert(event);
+                    ReserveRequest reserveRequest = new ReserveRequest(event);
+                    reserveRequest.setID(id + "");
+                    switch (topic) {
+                        case MQTTHelper.TOPIC_AIR_CONDITIONER:
+                        case MQTTHelper.TOPIC_TV:
+                        case MQTTHelper.TOPIC_LIGHT_SWITCH:
+                            reserveRequest.setCMD(value == 1 ? "ON" : "OFF");
+                            break;
+                        default:
+                            reserveRequest.setCMD(value == 1 ? "1" : "0");
+                            break;
+                    }
+                    //TODO: TOPIC錯誤
+                    getBaseApplication().getMqttHelper().publish(MainActivity.this, Utils.deviceConvertToReserveTopic(name), new Gson().toJson(reserveRequest));
+                } else {
+                    getBaseApplication().addAssistantMessage("錯誤");
+                }
+                changeTab(R.id.tab_chat);
+
             }
 
             @Override
@@ -185,13 +255,51 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void needVoice(Boolean flagThing, Boolean flagTime) {
-                super.needVoice(flagThing, flagTime);
-                if(!flagThing){
-                    openSpeaker("請問你是想做甚麼事情?");
-                }else if(!flagTime){
-                    openSpeaker("請問你要預約幾點?");
-                }
+            public void needVoice(String message) {
+                super.needVoice(message);
+                getBaseApplication().setVoiceCallback(new VoiceCallback() {
+                    @Override
+                    public void onSuccess(final List<String> words) {
+                        super.onSuccess(words);
+                        Helper.get(MainActivity.this, words.get(0), new DictionariesCallback() {
+                            @Override
+                            public void onFailure(IOException e) {
+                                super.onFailure(e);
+                                e.printStackTrace();
+                            }
+
+                            @Override
+                            public void onSuccess(String word, List<Dictionary> response) {
+                                super.onSuccess(word, response);
+                                Log.e("onSuccess", response.toString());
+                                ThingHelper.oldWords = ThingHelper.words;
+                                ThingHelper.words = words;
+                                ThingHelper.dictionaryList = response;
+                                state = analysisIsTimeAndPurpose;
+                            }
+                        });
+                    }
+                });
+                openSpeaker(message);
+                /*final List<String> words = new ArrayList<>();
+                words.add("現在");
+                Helper.get(MainActivity.this, words.get(0), new DictionariesCallback() {
+                    @Override
+                    public void onFailure(IOException e) {
+                        super.onFailure(e);
+                        e.printStackTrace();
+                    }
+
+                    @Override
+                    public void onSuccess(String word, List<Dictionary> response) {
+                        super.onSuccess(word, response);
+                        Log.e("onSuccess", response.toString());
+                        ThingHelper.oldWords = ThingHelper.words;
+                        ThingHelper.words = words;
+                        ThingHelper.dictionaryList = response;
+                        state = analysisIsTimeAndPurpose;
+                    }
+                });*/
             }
         });
     }
@@ -200,18 +308,70 @@ public class MainActivity extends AppCompatActivity {
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.fab:
-                //openSpeaker("請說話...");
-                ArrayList<String> result = new ArrayList<>();
-                result.add("幫我新增跟研究生開會");
-                searchWord(result);
+                getBaseApplication().setVoiceCallback(new VoiceCallback(){
+                    @Override
+                    public void onSuccess(final List<String> words) {
+                        super.onSuccess(words);
+                        Helper.get(MainActivity.this, words.get(0), new DictionariesCallback() {
+                            @Override
+                            public void onFailure(IOException e) {
+                                super.onFailure(e);
+                                e.printStackTrace();
+                            }
+
+                            @Override
+                            public void onSuccess(String word, List<Dictionary> response) {
+                                super.onSuccess(word, response);
+                                Log.e("onSuccess", response.toString());
+                                if (state == wait) {
+                                    thingWork(words, response);
+                                } else if (state == receiveVoice) {
+                                    ThingHelper.oldWords = ThingHelper.words;
+                                    ThingHelper.words = words;
+                                    ThingHelper.dictionaryList = response;
+                                    state = analysisIsTimeAndPurpose;
+                                }
+                            }
+                        });
+                    }
+                });
+                openSpeaker("請說話...");
+                /*ArrayList<String> result = new ArrayList<>();
+                result.add("幫我安排關閉電燈在十二點五分");
+                searchWord(result);*/
                 break;
         }
     }
 
+    private void searchWord(final List<String> result) {
+        Helper.get(MainActivity.this, result.get(ThingHelper.position), new DictionariesCallback() {
+            @Override
+            public void onFailure(IOException e) {
+                super.onFailure(e);
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onSuccess(String word, List<Dictionary> response) {
+                super.onSuccess(word, response);
+                Log.e("onSuccess", response.toString());
+                if (state == wait) {
+                    thingWork(result, response);
+                } else if (state == receiveVoice) {
+                    ThingHelper.oldWords = ThingHelper.words;
+                    ThingHelper.words = result;
+                    ThingHelper.dictionaryList = response;
+                    state = analysisIsTimeAndPurpose;
+                }
+            }
+        });
+    }
+
     private void openSpeaker(String message) {
+        getBaseApplication().addAssistantMessage(message);
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "請說話..."); //語音辨識 Dialog 上要顯示的提示文字
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, message); //語音辨識 Dialog 上要顯示的提示文字
         startActivityForResult(intent, REQUEST_VOICE_RECOGNIZE);
     }
 }

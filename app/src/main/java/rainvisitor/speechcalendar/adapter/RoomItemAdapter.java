@@ -41,11 +41,13 @@ public class RoomItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private final OnItemClickListener listener;
     private final LayoutInflater layoutInflater;
     private final Context context;
+    private final MQTTHelper mqttHelper;
 
     private static Boolean isTouched = false;
 
-    public RoomItemAdapter(Context context, List<RoomItem> contactList, OnItemClickListener listener) {
+    public RoomItemAdapter(Context context,MQTTHelper mqttHelper, List<RoomItem> contactList, OnItemClickListener listener) {
         this.contactList = contactList;
+        this.mqttHelper = mqttHelper;
         this.listener = listener;
         this.context = context;
         layoutInflater = LayoutInflater.from(context);
@@ -89,7 +91,7 @@ public class RoomItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         }
     }
 
-    @SuppressLint("SetTextI18n")
+    @SuppressLint({"SetTextI18n", "ClickableViewAccessibility"})
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, @SuppressLint("RecyclerView") final int position) {
         if (holder instanceof RoomInfoViewHolder) {
@@ -118,7 +120,7 @@ public class RoomItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
                 @Override
                 public void onStopTrackingTouch(SeekBar seekBar) {
-                    MQTTHelper.publish(context, MQTTHelper.TOPIC_LIGHT_SWITCH, seekBar.getProgress() + "");
+                    mqttHelper.publish(context, MQTTHelper.TOPIC_LIGHT_DIMMING, seekBar.getProgress() + "");
                 }
             });
         } else if (holder instanceof LightSwitchViewHolder) {
@@ -137,7 +139,7 @@ public class RoomItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                     if (isTouched) {
                         isTouched = false;
                         String content = b ? "ON" : "OFF";
-                        MQTTHelper.publish(context, MQTTHelper.TOPIC_LIGHT_SWITCH, content);
+                        mqttHelper.publish(context, MQTTHelper.TOPIC_LIGHT_SWITCH, content);
                     }
                 }
             });
@@ -157,7 +159,7 @@ public class RoomItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                     if (isTouched) {
                         isTouched = false;
                         String content = b ? "ON" : "OFF";
-                        MQTTHelper.publish(context, MQTTHelper.TOPIC_TV, content);
+                        mqttHelper.publish(context, MQTTHelper.TOPIC_TV, content);
                     }
                 }
             });
@@ -177,7 +179,7 @@ public class RoomItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                     if (isTouched) {
                         isTouched = false;
                         String content = b ? "ON" : "OFF";
-                        MQTTHelper.publish(context, MQTTHelper.TOPIC_AIR_CONDITIONER, content);
+                        mqttHelper.publish(context, MQTTHelper.TOPIC_AIR_CONDITIONER, content);
                     }
                 }
             });

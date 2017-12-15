@@ -21,8 +21,11 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import rainvisitor.speechcalendar.base.BaseApplication;
+import rainvisitor.speechcalendar.callback.BackgroundCallback;
 import rainvisitor.speechcalendar.callback.GeneralCallback;
 import rainvisitor.speechcalendar.callback.RoomCallback;
+import rainvisitor.speechcalendar.model.CallbackResponse;
 import rainvisitor.speechcalendar.model.RoomItem;
 import rainvisitor.speechcalendar.model.SensorResponse;
 
@@ -32,22 +35,41 @@ import rainvisitor.speechcalendar.model.SensorResponse;
 
 public class MQTTHelper {
 
-    private static MQTT mqtt = new MQTT();
+    private MQTT mqtt = new MQTT();
 
-    public static CallbackConnection connection;
+    public CallbackConnection connection;
 
     private static GeneralCallback generalCallback = null;
 
+    /*//內部
+    private static final String HOST = "192.168.200.50";
+    private static final int PORT = 1883;*/
+    //外部
     private static final String HOST = "pj.icp-si.com";
-    private static final int PORT = 65530;
+    private static final int PORT = 64502;
 
     public static final String TOPIC_SENSOR = "demo/home/1709181907/sensor";
-    public static final String TOPIC_LIGHT_SWITCH = "demo/home/1709181907/dimming";
-    public static final String TOPIC_LIGHT_DIMMING = "demo/home/1709181907/BattenLighting";
+    public static final String TOPIC_LIGHT_SWITCH = "demo/home/1709181907/BattenLighting";
+    public static final String TOPIC_LIGHT_DIMMING = "demo/home/1709181907/dimming";
     public static final String TOPIC_TV = "demo/home/1709181907/TV";
     public static final String TOPIC_AIR_CONDITIONER = "demo/home/1709181907/AC";
+    public static final String TOPIC_CALLBACK = "reserve/Callback";
 
-    public static void init() {
+    public static final String TOPIC_RESERVE_LIGHT_SWITCH = "reserve/BattenLighting";
+    public static final String TOPIC_RESERVE_LIGHT_DIMMING = "reserve/dimming";
+    public static final String TOPIC_RESERVE_TV = "reserve/TV";
+    public static final String TOPIC_RESERVE_AIR_CONDITIONER = "reserve/AC";
+
+    private BaseApplication baseApplication;
+
+    private RoomCallback roomCallback;
+
+    public MQTTHelper() {
+        this.mqtt = new MQTT();
+        init();
+    }
+
+    public void init() {
         try {
             mqtt.setHost(HOST, PORT);
         } catch (URISyntaxException e) {
@@ -56,7 +78,11 @@ public class MQTTHelper {
         connection = mqtt.callbackConnection();
     }
 
-    public static void subscribe(final Activity activity, final List<RoomItem> roomItems, final RoomCallback callback) {
+    public void setRoomCallback(RoomCallback roomCallback) {
+        this.roomCallback = roomCallback;
+    }
+
+    public void subscribe(final Activity activity, final List<RoomItem> roomItems) {
         connection.listener(new Listener() {
 
             public void onDisconnected() {
@@ -75,7 +101,7 @@ public class MQTTHelper {
                     data = new String(payload.getData(), "UTF8");
                     topicText = new String(topic.getData(), "UTF8");
                 } catch (UnsupportedEncodingException e) {
-                    callback.onFailure(e);
+                    roomCallback.onFailure(e);
                 }
                 assert data != null;
                 int start = data.indexOf('{');
@@ -88,9 +114,8 @@ public class MQTTHelper {
                         assert finalTopicText != null;
                         if (finalTopicText.contains(TOPIC_SENSOR)) {
                             final SensorResponse roomInfoResponse = new Gson().fromJson(content, SensorResponse.class);
-                            callback.onResponse(roomInfoResponse);
-                            if (MQTTHelper.generalCallback != null)
-                                MQTTHelper.generalCallback.onSuccess();
+                            if (roomCallback != null)
+                                roomCallback.onResponse(roomInfoResponse);
                         }
                     }
                 });
@@ -98,13 +123,15 @@ public class MQTTHelper {
 
             public void onFailure(Throwable value) {
                 // connection.close(null); // a connection failure occured.
-                callback.onFailure(value);
+                if (roomCallback != null)
+                    roomCallback.onFailure(value);
             }
         });
         connection.connect(new Callback<Void>() {
             public void onFailure(Throwable value) {
                 //  result.failure(value); // If we could not connect to the server.
-                callback.onFailure(value);
+                if (roomCallback != null)
+                    roomCallback.onFailure(value);
             }
 
             // Once we connect..
@@ -131,6 +158,8 @@ public class MQTTHelper {
 
                     public void onFailure(Throwable value) {
                         //connection.close(null); // subscribe failed.
+                        if (roomCallback != null)
+                            roomCallback.onFailure(value);
                     }
                 });
                 // Send a message to a topic
@@ -138,11 +167,84 @@ public class MQTTHelper {
         });
     }
 
-    public static void publish(final Context context, final String topic, final String content) {
+    public void subscribe(final List<Topic> topicList, final BackgroundCallback callback) {
+        connection.listener(new Listener() {
+
+            public void onDisconnected() {
+            }
+
+            public void onConnected() {
+            }
+
+            public void onPublish(UTF8Buffer topic, Buffer payload, Runnable ack) {
+
+                // You can now process a received message from a topic.
+                // Once process execute the ack runnable.
+                ack.run();
+                String data = null, topicText = null;
+                try {
+                    data = new String(payload.getData(), "UTF8");
+                    topicText = new String(topic.getData(), "UTF8");
+                } catch (UnsupportedEncodingException e) {
+                    callback.onFailure(e);
+                }
+                assert data != null;
+                int start = data.indexOf('{');
+                if (start == -1) return;
+                final String content = data.substring(start);
+                final String finalTopicText = topicText;
+                assert finalTopicText != null;
+                if (finalTopicText.contains(TOPIC_CALLBACK)) {
+                    final CallbackResponse response = new Gson().fromJson(content, CallbackResponse.class);
+                    callback.onResponse(response);
+                    if (MQTTHelper.generalCallback != null)
+                        MQTTHelper.generalCallback.onSuccess();
+                }
+            }
+
+            public void onFailure(Throwable value) {
+                // connection.close(null); // a connection failure occured.
+                callback.onFailure(value);
+            }
+        });
+        connection.connect(new Callback<Void>() {
+            public void onFailure(Throwable value) {
+                //  result.failure(value); // If we could not connect to the server.
+                callback.onFailure(value);
+            }
+
+            // Once we connect..
+            public void onSuccess(Void v) {
+                Log.e("onSuccess", "connect");
+                // Subscribe to a topic
+                Topic[] topics = topicList.toArray(new Topic[topicList.size()]);
+                connection.subscribe(topics, new Callback<byte[]>() {
+                    public void onSuccess(byte[] qoses) {
+                        Log.e("onSuccess", "subscribe");
+                        // The result of the subscribe request.
+                        String sh = null;
+                        try {
+                            sh = new String(qoses, "US-ASCII");
+                        } catch (UnsupportedEncodingException e) {
+                            e.printStackTrace();
+                        }
+                        Log.e("messageh", sh);
+                    }
+
+                    public void onFailure(Throwable value) {
+                        //connection.close(null); // subscribe failed.
+                    }
+                });
+                // Send a message to a topic
+            }
+        });
+    }
+
+    public void publish(final Context context, final String topic, final String content) {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Log.e("content", topic.length() + " " + content + " " + content.getBytes().length);
+                Log.e("publish content", topic + " " + content + " " + content.getBytes().length);
                 connection.publish(topic, content.getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
                     @Override
                     public void onSuccess(Void value) {
@@ -167,9 +269,5 @@ public class MQTTHelper {
             }
         }).start();
 
-    }
-
-    public static void addCallback(GeneralCallback generalCallback) {
-        MQTTHelper.generalCallback = generalCallback;
     }
 }
