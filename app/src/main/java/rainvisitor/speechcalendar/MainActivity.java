@@ -133,7 +133,9 @@ public class MainActivity extends BaseActivity {
     private void thingWork(final List<String> Words, final List<Dictionary> response) {
         state = ThingHelper.analysisIsArrange;
         getBaseApplication().addUserMessage(Words.get(ThingHelper.position));
-        changeTab(R.id.tab_chat);
+        if (getBaseApplication().getChatCallback() != null) {
+            getBaseApplication().getChatCallback().onSuccess();
+        }
         ThingHelper.send(this, Words, response, new ThingCallback() {
             @Override
             public void unKnownCommand(final List<String> words) {
@@ -308,7 +310,7 @@ public class MainActivity extends BaseActivity {
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.fab:
-                getBaseApplication().setVoiceCallback(new VoiceCallback(){
+                getBaseApplication().setVoiceCallback(new VoiceCallback() {
                     @Override
                     public void onSuccess(final List<String> words) {
                         super.onSuccess(words);

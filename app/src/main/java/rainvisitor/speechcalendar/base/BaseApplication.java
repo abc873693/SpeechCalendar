@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import rainvisitor.speechcalendar.callback.GeneralCallback;
 import rainvisitor.speechcalendar.callback.VoiceCallback;
 import rainvisitor.speechcalendar.libs.AppDatabase;
 import rainvisitor.speechcalendar.libs.MQTTHelper;
@@ -29,6 +30,8 @@ import rainvisitor.speechcalendar.model.TV;
 public class BaseApplication extends Application {
 
     private MQTTHelper mqttHelper;
+
+    private GeneralCallback chatCallback;
 
     private VoiceCallback voiceCallback;
 
@@ -80,6 +83,14 @@ public class BaseApplication extends Application {
 
     public void setRoomItemList(List<RoomItem> roomItemList) {
         this.roomItemList = roomItemList;
+    }
+
+    public GeneralCallback getChatCallback() {
+        return chatCallback;
+    }
+
+    public void setChatCallback(GeneralCallback chatCallback) {
+        this.chatCallback = chatCallback;
     }
 
     public VoiceCallback getVoiceCallback() {

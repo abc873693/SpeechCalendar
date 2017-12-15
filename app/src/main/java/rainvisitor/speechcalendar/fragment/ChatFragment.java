@@ -21,6 +21,7 @@ import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import rainvisitor.speechcalendar.R;
 import rainvisitor.speechcalendar.base.BaseFragment;
+import rainvisitor.speechcalendar.callback.GeneralCallback;
 import rainvisitor.speechcalendar.model.Message;
 
 public class ChatFragment extends BaseFragment {
@@ -46,6 +47,13 @@ public class ChatFragment extends BaseFragment {
         restoreArgs(savedInstanceState);
         unbinder = ButterKnife.bind(this, view);
         setView();
+        getBaseApplication().setChatCallback(new GeneralCallback() {
+            @Override
+            public void onSuccess() {
+                super.onSuccess();
+                setView();
+            }
+        });
         return view;
     }
 
@@ -92,5 +100,6 @@ public class ChatFragment extends BaseFragment {
     public void onDestroyView() {
         super.onDestroyView();
         unbinder.unbind();
+        getBaseApplication().setChatCallback(null);
     }
 }

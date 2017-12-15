@@ -113,9 +113,13 @@ public class MQTTHelper {
                     public void run() {
                         assert finalTopicText != null;
                         if (finalTopicText.contains(TOPIC_SENSOR)) {
-                            final SensorResponse roomInfoResponse = new Gson().fromJson(content, SensorResponse.class);
-                            if (roomCallback != null)
-                                roomCallback.onResponse(roomInfoResponse);
+                            try {
+                                final SensorResponse roomInfoResponse = new Gson().fromJson(content, SensorResponse.class);
+                                if (roomCallback != null)
+                                    roomCallback.onResponse(roomInfoResponse);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 });

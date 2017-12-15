@@ -53,7 +53,7 @@ public class ThingHelper {
     private static final String[] open = {"打開", "開啟", "開"};
     private static final String[] close = {"關閉", "關"};
 
-    private static final String[] hardwareList = {"可調燈","調光燈","層板燈", "電燈", "冷氣", "電視"};
+    private static final String[] hardwareList = {"可調燈", "調光燈", "層板燈", "電燈", "冷氣", "電視"};
 
     public static List<String> oldWords = null;
 
@@ -245,11 +245,10 @@ public class ThingHelper {
                 flagThing = true;
                 thing = "";
                 analysisHardwareControl();
-                if (isHardwareControl) {
-                    for (Dictionary dictionary : dictionaryList) {
-                        thing = String.format("%s%s", thing, dictionary.getWord());
-                    }
-                } else if (thing.equals("")) {
+                for (Dictionary dictionary : dictionaryList) {
+                    thing = String.format("%s%s", thing, dictionary.getWord());
+                }
+                if (thing.equals("")) {
                     flagTime = false;
                 }
             }
